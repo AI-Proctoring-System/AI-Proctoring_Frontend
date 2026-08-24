@@ -53,8 +53,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       const errorVal = err as Error;
-      const msg = errorVal.message || 'Login failed. Please try again.';
-      setError(msg);
+      const msg = errorVal.message || 'Login failed. Please check your credentials.';
       toastError(msg);
     } finally {
       setIsLoading(false);
@@ -167,7 +166,3 @@ export default function LoginPage() {
     </div>
   );
 }
-function setError(msg: string) {
-  throw new Error('Function not implemented.');
-}
-
