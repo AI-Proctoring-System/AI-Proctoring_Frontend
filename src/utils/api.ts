@@ -1,10 +1,13 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface DecodedToken {
   sub: string;
   email: string;
   role: string;
+  companyId?: string;
   candidateId?: string;
+  firstName?: string;
+  lastName?: string;
   exp?: number;
 }
 

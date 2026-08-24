@@ -54,7 +54,7 @@ export default function SignupPage() {
         if (response.exists) {
           toastWarning('This email is already registered to a company.');
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error checking email availability:', err);
       } finally {
         setEmailChecking(false);

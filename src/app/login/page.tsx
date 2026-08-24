@@ -20,13 +20,13 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Quick validation
     if (!email || !password) {
       toastError('Please fill in all fields.');
@@ -43,11 +43,11 @@ export default function LoginPage() {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      
+
       if (response && response.accessToken) {
         toastSuccess('Successfully logged in!');
         login(response.accessToken);
-        router.push('/');
+        router.push('/dashboard');
       } else {
         throw new Error('Authentication token not received.');
       }

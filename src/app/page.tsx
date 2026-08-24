@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -185,6 +186,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
