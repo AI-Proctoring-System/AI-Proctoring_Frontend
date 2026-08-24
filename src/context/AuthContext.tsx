@@ -41,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
+    setTimeout(() => {
+      checkAuth();
+    }, 0);
     
     // Add event listener to sync auth state across tabs
     const handleStorageChange = (e: StorageEvent) => {

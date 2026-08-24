@@ -51,8 +51,10 @@ export default function LoginPage() {
       } else {
         throw new Error('Authentication token not received.');
       }
-    } catch (err: any) {
-      toastError(err.message || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      const errorVal = err as Error;
+      const msg = errorVal.message || 'Login failed. Please check your credentials.';
+      toastError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +157,7 @@ export default function LoginPage() {
 
         {/* Footer info */}
         <div className="text-center text-sm text-neutral-500 mt-6">
-          Don't have an account?  {' '}
+          Don&apos;t have an account?  {' '}
           <Link href="/signup" className="font-semibold text-brand-green hover:underline">
             Register your company
           </Link>
