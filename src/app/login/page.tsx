@@ -20,13 +20,13 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push('/dashboard');
     }
   }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Quick validation
     if (!email || !password) {
       toastError('Please fill in all fields.');
@@ -43,16 +43,19 @@ export default function LoginPage() {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      
+
       if (response && response.accessToken) {
         toastSuccess('Successfully logged in!');
         login(response.accessToken);
-        router.push('/');
+        router.push('/dashboard');
       } else {
         throw new Error('Authentication token not received.');
       }
-    } catch (err: any) {
-      toastError(err.message || 'Login failed. Please check your credentials.');
+    } catch (err) {
+      const errorVal = err as Error;
+      const msg = errorVal.message || 'Login failed. Please try again.';
+      setError(msg);
+      toastError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -155,7 +158,7 @@ export default function LoginPage() {
 
         {/* Footer info */}
         <div className="text-center text-sm text-neutral-500 mt-6">
-          Don't have an account?  {' '}
+          Don&apos;t have an account?  {' '}
           <Link href="/signup" className="font-semibold text-brand-green hover:underline">
             Register your company
           </Link>
@@ -164,3 +167,7 @@ export default function LoginPage() {
     </div>
   );
 }
+function setError(msg: string) {
+  throw new Error('Function not implemented.');
+}
+

@@ -1,10 +1,13 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface DecodedToken {
   sub: string;
   email: string;
   role: string;
+  companyId?: string;
   candidateId?: string;
+  firstName?: string;
+  lastName?: string;
   exp?: number;
 }
 
@@ -20,7 +23,7 @@ export function decodeToken(token: string): DecodedToken | null {
   }
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {

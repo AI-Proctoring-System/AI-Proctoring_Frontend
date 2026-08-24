@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import Footer from '../components/Footer';
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
@@ -137,7 +138,7 @@ export default function Home() {
               <p className="text-base font-semibold leading-7 text-brand-green">Seamless Integration</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl">How ProctorAI Protects Exams</h2>
               <p className="mt-6 text-lg leading-8 text-neutral-600">
-                We designed ProctorAI to work natively inside the candidate's browser without requiring complex software installations.
+                We designed ProctorAI to work natively inside the candidate&apos;s browser without requiring complex software installations.
               </p>
               <dl className="mt-10 max-w-xl space-y-8 text-base leading-7 text-neutral-600">
                 <div className="relative pl-9">
@@ -185,6 +186,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }

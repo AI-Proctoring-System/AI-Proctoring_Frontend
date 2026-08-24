@@ -1,7 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { decodeToken, DecodedToken } from '../utils/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { decodeToken, DecodedToken, apiRequest } from '../utils/api';
 
 interface AuthContextType {
   user: DecodedToken | null;
@@ -17,7 +17,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<DecodedToken | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkAuth = () => {
+  const fetchProfileDetails = useCallback(async (decoded: DecodedToken) => {
+    try {
+      const profile = await apiRequest<{ firstName?: string; lastName?: string }>('auth/profile');
+      if (profile) {
+        setUser({
+          ...decoded,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+        });
+      }
+    } catch (err) {
+      console.error('Error loading full user profile:', err);
+    }
+  }, []);
+
+  const checkAuth = useCallback(async () => {
     try {
       const token = localStorage.getItem('proctor_token');
       if (token) {
@@ -25,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check if token is expired
         if (decoded && decoded.exp && decoded.exp * 1000 > Date.now()) {
           setUser(decoded);
+          await fetchProfileDetails(decoded);
         } else {
           // Token expired
           localStorage.removeItem('proctor_token');
@@ -38,10 +54,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchProfileDetails]);
 
   useEffect(() => {
-    checkAuth();
+    setTimeout(() => {
+      checkAuth();
+    }, 0);
     
     // Add event listener to sync auth state across tabs
     const handleStorageChange = (e: StorageEvent) => {
@@ -51,12 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, [checkAuth]);
 
-  const login = (token: string) => {
+  const login = async (token: string) => {
     localStorage.setItem('proctor_token', token);
     const decoded = decodeToken(token);
-    setUser(decoded);
+    if (decoded) {
+      setUser(decoded);
+      await fetchProfileDetails(decoded);
+    }
   };
 
   const logout = () => {
