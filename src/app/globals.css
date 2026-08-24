@@ -10,17 +10,15 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand-green: #2d4a3e;
+  --color-brand-green-hover: #1f332b;
+  --color-brand-green-light: #e9f0ec;
+  --color-brand-green-border: #ccdcd5;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #fdfdfd;
+  color: #1a1a1a;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
