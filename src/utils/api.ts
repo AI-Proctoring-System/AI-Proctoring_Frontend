@@ -20,7 +20,7 @@ export function decodeToken(token: string): DecodedToken | null {
   }
 }
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {

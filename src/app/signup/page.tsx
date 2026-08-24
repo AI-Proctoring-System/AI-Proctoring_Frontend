@@ -35,18 +35,18 @@ export default function SignupPage() {
 
   // Debounced email availability check
   useEffect(() => {
-    if (!email) {
-      setEmailExists(null);
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setEmailExists(null);
-      return;
-    }
-
     const timer = setTimeout(async () => {
+      if (!email) {
+        setEmailExists(null);
+        return;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        setEmailExists(null);
+        return;
+      }
+
       setEmailChecking(true);
       try {
         const response = await apiRequest<{ exists: boolean }>(`auth/check-email?email=${encodeURIComponent(email)}`);
@@ -59,7 +59,7 @@ export default function SignupPage() {
       } finally {
         setEmailChecking(false);
       }
-    }, 600);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [email, toastWarning]);
@@ -135,8 +135,9 @@ export default function SignupPage() {
       } else {
         throw new Error('Registration succeeded but token was not returned.');
       }
-    } catch (err: any) {
-      toastError(err.message || 'Registration failed. Please check your inputs.');
+    } catch (err) {
+      const errorVal = err as Error;
+      toastError(errorVal.message || 'Registration failed. Please check your inputs.');
     } finally {
       setIsLoading(false);
     }
