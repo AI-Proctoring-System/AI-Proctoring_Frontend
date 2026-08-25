@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface SystemCheckProps {
   onComplete: () => void;
@@ -23,6 +23,67 @@ export default function SystemCheck({ onComplete }: SystemCheckProps) {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>(0);
+
+  // Function to stop media streams and clean up audio context, stable reference via useCallback
+  const stopMedia = useCallback(() => {
+    setStream(prevStream => {
+      if (prevStream) {
+        prevStream.getTracks().forEach(track => track.stop());
+      }
+      return null;
+    });
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(console.error);
+      audioContextRef.current = null;
+    }
+  }, []);
+
+  const setupAudioAnalyzer = useCallback((mediaStream: MediaStream) => {
+    try {
+      const AudioContext = window.AudioContext || (window as typeof window & { webkitAudioContext: AudioContext }).webkitAudioContext;
+      const audioCtx = new AudioContext();
+      audioContextRef.current = audioCtx;
+      
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioCtx.createMediaStreamSource(mediaStream);
+      source.connect(analyser);
+
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const checkAudioLevel = () => {
+        if (!analyserRef.current) return;
+        
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Calculate average volume
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / bufferLength;
+        const volumePercentage = Math.min(100, Math.round((average / 128) * 100));
+        
+        setAudioLevel(volumePercentage);
+        
+        if (volumePercentage > 10) {
+          setHasDetectedSound(true);
+        }
+
+        animationFrameRef.current = requestAnimationFrame(checkAudioLevel);
+      };
+
+      checkAudioLevel();
+    } catch (err) {
+      console.error('Audio setup error:', err);
+    }
+  }, []);
 
   // Initial load to request permissions and fetch devices
   useEffect(() => {
@@ -66,7 +127,7 @@ export default function SystemCheck({ onComplete }: SystemCheckProps) {
     return () => {
       stopMedia();
     };
-  }, []);
+  }, [stopMedia]);
 
   // Effect to update stream when selected devices change
   useEffect(() => {
@@ -104,65 +165,7 @@ export default function SystemCheck({ onComplete }: SystemCheckProps) {
     }
 
     startStream();
-  }, [selectedCamera, selectedMic, permissionsGranted]);
-
-  const setupAudioAnalyzer = (mediaStream: MediaStream) => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioContext();
-      audioContextRef.current = audioCtx;
-      
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      analyserRef.current = analyser;
-      
-      const source = audioCtx.createMediaStreamSource(mediaStream);
-      source.connect(analyser);
-
-      const bufferLength = analyser.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const checkAudioLevel = () => {
-        if (!analyserRef.current) return;
-        
-        analyserRef.current.getByteFrequencyData(dataArray);
-        
-        // Calculate average volume
-        let sum = 0;
-        for (let i = 0; i < bufferLength; i++) {
-          sum += dataArray[i];
-        }
-        const average = sum / bufferLength;
-        const volumePercentage = Math.min(100, Math.round((average / 128) * 100));
-        
-        setAudioLevel(volumePercentage);
-        
-        if (volumePercentage > 10) {
-          setHasDetectedSound(true);
-        }
-
-        animationFrameRef.current = requestAnimationFrame(checkAudioLevel);
-      };
-
-      checkAudioLevel();
-    } catch (err) {
-      console.error('Audio setup error:', err);
-    }
-  };
-
-  const stopMedia = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    if (audioContextRef.current) {
-      audioContextRef.current.close().catch(console.error);
-      audioContextRef.current = null;
-    }
-    setStream(null);
-  };
+  }, [selectedCamera, selectedMic, permissionsGranted, stopMedia, setupAudioAnalyzer]);
 
   const handleProceed = () => {
     stopMedia();
