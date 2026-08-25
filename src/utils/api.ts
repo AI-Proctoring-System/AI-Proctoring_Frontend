@@ -8,6 +8,7 @@ export interface DecodedToken {
   candidateId?: string;
   firstName?: string;
   lastName?: string;
+  company?: { name: string };
   exp?: number;
 }
 

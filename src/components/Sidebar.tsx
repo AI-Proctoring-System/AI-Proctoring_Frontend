@@ -61,11 +61,6 @@ export default function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-neutral-100 bg-white">
-      {/* Header / Brand */}
-      <div className="flex h-16 items-center gap-2 px-6 border-b border-neutral-50">
-        <Logo size={28} />
-        <span className="font-extrabold text-neutral-900 tracking-tight text-lg">ProctorAI</span>
-      </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-4 py-6">

@@ -19,12 +19,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileDetails = useCallback(async (decoded: DecodedToken) => {
     try {
-      const profile = await apiRequest<{ firstName?: string; lastName?: string }>('auth/profile');
+      const profile = await apiRequest<{ firstName?: string; lastName?: string; company?: { name: string } }>('auth/profile');
       if (profile) {
         setUser({
           ...decoded,
           firstName: profile.firstName,
           lastName: profile.lastName,
+          company: profile.company,
         });
       }
     } catch (err) {
