@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { apiRequest } from '../../../../utils/api';
 import { useToast } from '../../../../context/ToastContext';
 import { useAuth } from '../../../../context/AuthContext';
+import SystemCheck from '../../../../components/SystemCheck';
 
 interface AnswerOption {
   id: string;
@@ -44,7 +45,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Flow State: 0 = Rules/Guidelines, 1 = Face Check, 2 = Room Scan, 3 = Exam Quiz, 4 = Completed
+  // Flow State: 0 = Rules/Guidelines, 1 = System Check, 2 = Face Check, 3 = Room Scan, 4 = Exam Quiz, 5 = Completed
   const [step, setStep] = useState(0);
 
   // Consent checkbox
@@ -144,7 +145,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
             }
           ]);
         }
-        setStep(3);
+        setStep(4);
       }
     } catch (err) {
       const errorVal = err as Error;
@@ -155,13 +156,13 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
   };
 
   const handleSubmitExam = useCallback(() => {
-    setStep(4);
+    setStep(5);
     toastSuccess('Examination submitted successfully.');
   }, [toastSuccess]);
 
-  // Active Tab Switch detector during step 3 (Exam Mode)
+  // Active Tab Switch detector during step 4 (Exam Mode)
   useEffect(() => {
-    if (step !== 3) return;
+    if (step !== 4) return;
 
     const handleBlur = () => {
       setTabSwitches((prev) => {
@@ -179,7 +180,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
 
   // Countdown timer for exam
   useEffect(() => {
-    if (step !== 3 || timeLeft <= 0) return;
+    if (step !== 4 || timeLeft <= 0) return;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -268,7 +269,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           <span className="text-2xs font-semibold text-neutral-400 uppercase tracking-wider">Candidate Workspace</span>
           <h1 className="text-lg font-bold text-neutral-900 leading-tight">{assessment.title}</h1>
         </div>
-        {step === 3 && (
+        {step === 4 && (
           <div className="flex items-center gap-6">
             {/* Timer */}
             <div className="text-center">
@@ -365,16 +366,21 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
               onClick={() => setStep(1)}
               className="w-full rounded-lg bg-brand-green py-2.5 px-4 text-sm font-semibold text-white hover:bg-brand-green-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              I Understand, Start Verification
+              I Understand, Start System Check
             </button>
           </div>
         )}
 
-        {/* STEP 1: Identity Check */}
+        {/* STEP 1: Hardware System Check */}
         {step === 1 && (
+          <SystemCheck onComplete={() => setStep(2)} />
+        )}
+
+        {/* STEP 2: Identity Check */}
+        {step === 2 && (
           <div className="w-full max-w-lg bg-white rounded-2xl border border-neutral-100 p-8 shadow-xs space-y-6 text-center">
             <div>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green text-sm font-bold">2</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green text-sm font-bold">3</span>
               <h2 className="text-xl font-bold text-neutral-900 mt-3">Identity Check</h2>
               <p className="text-sm text-neutral-400 mt-1">Please fit your face clearly inside the camera frame below.</p>
             </div>
@@ -413,7 +419,7 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
               </button>
               <button
                 type="button"
-                onClick={() => setStep(2)}
+                onClick={() => setStep(3)}
                 disabled={!faceScanSuccess}
                 className="flex-1 rounded-lg border border-neutral-200 bg-white py-2.5 px-4 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50"
               >
@@ -423,11 +429,11 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           </div>
         )}
 
-        {/* STEP 2: Room Sweeper Check */}
-        {step === 2 && (
+        {/* STEP 3: Room Sweeper Check */}
+        {step === 3 && (
           <div className="w-full max-w-lg bg-white rounded-2xl border border-neutral-100 p-8 shadow-xs space-y-6 text-center">
             <div>
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green text-sm font-bold">3</span>
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green text-sm font-bold">4</span>
               <h2 className="text-xl font-bold text-neutral-900 mt-3">360° Desk & Room Sweep</h2>
               <p className="text-sm text-neutral-400 mt-1">Slowly rotate your webcam 360 degrees to verify a clean workspace.</p>
             </div>
@@ -476,8 +482,8 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           </div>
         )}
 
-        {/* STEP 3: Exam Environment */}
-        {step === 3 && (
+        {/* STEP 4: Exam Environment */}
+        {step === 4 && (
           <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
 
             {/* Questions Pane */}
@@ -588,8 +594,8 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
           </div>
         )}
 
-        {/* STEP 4: Finished */}
-        {step === 4 && (
+        {/* STEP 5: Finished */}
+        {step === 5 && (
           <div className="w-full max-w-lg bg-white rounded-2xl border border-neutral-100 p-8 shadow-xs text-center space-y-6">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
               <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
