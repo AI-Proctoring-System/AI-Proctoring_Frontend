@@ -53,9 +53,8 @@ export async function apiRequest<T = unknown>(
     throw new Error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
   }
 
-  // The backend uses a TransformInterceptor which wraps responses in a structure, 
-  // let's handle both raw responses and wrapped { data, statusCode, etc. }
-  if (data && 'data' in data && 'statusCode' in data) {
+  // The backend uses a ResponseInterceptor which wraps responses in { success: true, data: ... }
+  if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
     return data.data as T;
   }
 
