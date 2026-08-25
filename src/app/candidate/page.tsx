@@ -18,6 +18,7 @@ interface ScheduledAttempt {
     durationMinutes: number;
     passingScore: number;
     examDate: string;
+    endTime: string;
   };
 }
 
@@ -46,8 +47,13 @@ export default function CandidatePortal() {
       try {
         const data = await apiRequest<ScheduledAttempt[]>('attempts/scheduled');
         if (data) {
+          const now = new Date();
           // Filter to only show active invites / in-progress assessments
-          setInvitations(data.filter((item) => item.assessment.status === 'PUBLISHED'));
+          setInvitations(data.filter((item) => {
+            if (item.assessment.status !== 'PUBLISHED') return false;
+            if (item.assessment.endTime && new Date(item.assessment.endTime) < now) return false;
+            return true;
+          }));
         }
       } catch (err) {
         toastError('Failed to load candidate examinations.');

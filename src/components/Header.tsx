@@ -2,22 +2,34 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const pathname = usePathname();
+  const isLandingPage = pathname === '/';
+
+  const getInitials = (name?: string, maxInitials = 3) => {
+    if (!name) return 'US';
+    const words = name.trim().split(/\s+/);
+    if (words.length > 1) {
+      return words.slice(0, maxInitials).map(w => w[0]).join('').toUpperCase();
+    }
+    return name.substring(0, Math.min(2, maxInitials)).toUpperCase();
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-neutral-100 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+      <div className="flex h-16 w-full items-center justify-between px-6 md:px-8 relative">
         {/* Left Logo */}
         <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-90">
           <Logo size={28} />
         </Link>
 
-        {/* Center Nav Links (Optional helper links) */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Center Nav Links */}
+        <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
           <Link 
             href="/#features" 
             className="text-sm font-medium text-neutral-600 transition-colors hover:text-brand-green"
@@ -40,15 +52,14 @@ export default function Header() {
 
         {/* Right Actions */}
         <div className="flex items-center gap-4">
-          {isAuthenticated ? (
+          {isAuthenticated && !isLandingPage ? (
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                {/* Initials circle */}
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green font-semibold text-xs border border-brand-green-border">
-                  {user?.email?.substring(0, 2).toUpperCase() || 'US'}
+                  {getInitials(user?.company?.name || user?.email)}
                 </div>
                 <span className="hidden sm:inline text-sm font-medium text-neutral-700 max-w-[150px] truncate">
-                  {user?.email}
+                  {user?.company?.name || user?.email}
                 </span>
               </div>
               
@@ -59,7 +70,7 @@ export default function Header() {
                 Log Out
               </button>
             </div>
-          ) : (
+          ) : isLandingPage ? null : (
             <div className="flex items-center gap-3">
               <Link
                 href="/login"

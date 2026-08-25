@@ -27,6 +27,7 @@ interface Assessment {
   durationMinutes: number;
   passingScore: number;
   examDate: string;
+  endTime?: string;
   instructions?: string;
   allowedMaterials?: string[];
   prohibitedMaterials?: string[];
@@ -82,6 +83,12 @@ export default function ExamPage({ params }: { params: Promise<{ id: string }> }
       try {
         const response = await apiRequest<{ assessment: Assessment }>(`attempts/invitation/${assessmentId}`);
         if (response && response.assessment) {
+          const now = new Date();
+          if (response.assessment.endTime && new Date(response.assessment.endTime) < now) {
+            toastError('This assessment has expired and can no longer be accessed.');
+            setAssessment(null);
+            return;
+          }
           setAssessment(response.assessment);
           setTimeLeft(response.assessment.durationMinutes * 60);
         } else {

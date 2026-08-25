@@ -50,11 +50,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               Company Portal
             </span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-neutral-400 font-semibold">
-              Logged in as <strong className="text-neutral-700">{user?.email}</strong>
-            </span>
-          </div>
         </header>
 
         <main className="p-8 max-w-7xl w-full mx-auto">

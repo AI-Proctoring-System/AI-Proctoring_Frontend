@@ -1,12 +1,20 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import Footer from '../components/Footer';
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <div className="flex flex-col bg-white">
@@ -28,34 +36,7 @@ export default function Home() {
             </p>
             
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              {isAuthenticated ? (
-                <div className="flex flex-col sm:flex-row gap-4 items-center">
-                  <span className="text-sm font-medium text-neutral-500">
-                    Logged in as <span className="font-semibold text-neutral-800">{user?.email}</span>
-                  </span>
-                  <Link
-                    href="/dashboard"
-                    className="rounded-lg bg-brand-green px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors"
-                  >
-                    Go to Dashboard
-                  </Link>
-                </div>
-              ) : (
-                <>
-                  <Link
-                    href="/signup"
-                    className="rounded-lg bg-brand-green px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors"
-                  >
-                    Get Started Free
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="rounded-lg border border-neutral-200 bg-white px-5 py-3 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                </>
-              )}
+              {/* No authentication buttons on the public landing page */}
             </div>
           </div>
         </div>
