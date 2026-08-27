@@ -11,12 +11,14 @@ interface Candidate {
   email: string;
   phone?: string;
   status: 'PENDING' | 'INVITED' | 'COMPLETED';
+  invitedAssessmentIds?: string[];
 }
 
 interface Assessment {
   id: string;
   title: string;
   status: string;
+  endTime: string;
 }
 
 export default function CandidatesPage() {
@@ -27,8 +29,14 @@ export default function CandidatesPage() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [assessmentToConfirm, setAssessmentToConfirm] = useState<Assessment | null>(null);
   const [sendingInvite, setSendingInvite] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Search and Pagination State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
 
   // Edit Candidate State
   const [showEditModal, setShowEditModal] = useState(false);
@@ -48,6 +56,30 @@ export default function CandidatesPage() {
   const handleUpdateCandidate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCandidateId) return;
+
+    // Check if it's a local pending candidate
+    const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
+    const localCandidateIndex = localPending.findIndex((c: Candidate) => c.id === editingCandidateId);
+
+    if (localCandidateIndex !== -1) {
+      localPending[localCandidateIndex] = {
+        ...localPending[localCandidateIndex],
+        firstName: editFirstName,
+        lastName: editLastName,
+        phone: editPhone || undefined,
+      };
+      localStorage.setItem('pendingCandidates', JSON.stringify(localPending));
+      setCandidates(prev => prev.map(c => c.id === editingCandidateId ? {
+        ...c,
+        firstName: editFirstName,
+        lastName: editLastName,
+        phone: editPhone || undefined,
+      } : c));
+      toastSuccess('Candidate updated successfully.');
+      setShowEditModal(false);
+      return;
+    }
+
     try {
       await apiRequest(`assessments/candidates/${editingCandidateId}`, {
         method: 'PATCH',
@@ -73,6 +105,19 @@ export default function CandidatesPage() {
 
   const handleDeleteCandidate = async (id: string) => {
     if (!confirm('Are you sure you want to delete this candidate? This will remove all their invitations and exam attempts.')) return;
+    
+    // Check if it's a local pending candidate
+    const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
+    const isLocal = localPending.some((c: Candidate) => c.id === id);
+
+    if (isLocal) {
+      const updatedLocalPending = localPending.filter((c: Candidate) => c.id !== id);
+      localStorage.setItem('pendingCandidates', JSON.stringify(updatedLocalPending));
+      setCandidates(prev => prev.filter(c => c.id !== id));
+      toastSuccess('Candidate deleted successfully.');
+      return;
+    }
+
     try {
       await apiRequest(`assessments/candidates/${id}`, { method: 'DELETE' });
       toastSuccess('Candidate deleted successfully.');
@@ -89,7 +134,9 @@ export default function CandidatesPage() {
       try {
         const data = await apiRequest<Candidate[]>('assessments/candidates/all');
         if (data) {
-          setCandidates(data);
+          // Load local pending candidates
+          const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
+          setCandidates([...data, ...localPending]);
         }
       } catch (err) {
         toastError('Failed to load candidate list.');
@@ -100,6 +147,11 @@ export default function CandidatesPage() {
     }
     loadCandidates();
   }, [toastError]);
+
+  // Reset to page 1 on search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Fetch active assessments for invitation
   useEffect(() => {
@@ -148,6 +200,11 @@ export default function CandidatesPage() {
 
       if (newCandidates.length > 0) {
         setCandidates(prev => [...prev, ...newCandidates]);
+        
+        // Save to local storage
+        const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
+        localStorage.setItem('pendingCandidates', JSON.stringify([...localPending, ...newCandidates]));
+
         toastSuccess(`Successfully imported ${newCandidates.length} candidates from CSV.`);
       } else {
         toastError('Failed to parse CSV. Make sure fields are ordered: First Name, Last Name, Email, Phone.');
@@ -199,7 +256,14 @@ export default function CandidatesPage() {
       
       // Update local status of this candidate
       setCandidates(prev => prev.map(c => c.id === selectedCandidate.id ? { ...c, status: 'INVITED' } : c));
+      
+      // Remove from local storage since it's now in the backend
+      const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
+      const updatedLocalPending = localPending.filter((c: Candidate) => c.id !== selectedCandidate.id);
+      localStorage.setItem('pendingCandidates', JSON.stringify(updatedLocalPending));
+
       setShowInviteModal(false);
+      setAssessmentToConfirm(null);
     } catch (err) {
       const errorVal = err as Error;
       toastError(errorVal.message || 'Failed to dispatch invitation request.');
@@ -207,6 +271,34 @@ export default function CandidatesPage() {
       setSendingInvite(false);
     }
   };
+
+  // Derived state for filtering and pagination
+  const filteredCandidates = candidates.filter((c) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      c.firstName.toLowerCase().includes(query) ||
+      c.lastName.toLowerCase().includes(query) ||
+      c.email.toLowerCase().includes(query) ||
+      (c.phone && c.phone.toLowerCase().includes(query)) ||
+      c.status.toLowerCase().includes(query)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  const paginatedCandidates = filteredCandidates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Calculate eligible assessments for the modal
+  const now = new Date();
+  const eligibleAssessments = selectedCandidate
+    ? assessments.filter((a) => {
+        const isExpired = new Date(a.endTime) < now;
+        const isAlreadyInvited = selectedCandidate.invitedAssessmentIds?.includes(a.id);
+        return !isExpired && !isAlreadyInvited;
+      })
+    : [];
 
   return (
     <div className="space-y-6">
@@ -245,6 +337,22 @@ export default function CandidatesPage() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-400">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="Search candidates by name, email, or status..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="block w-full rounded-lg border border-neutral-200 bg-white pl-10 pr-3 py-2 text-xs text-neutral-900 focus:border-brand-green focus:outline-none transition-colors shadow-xs"
+        />
+      </div>
+
       {/* Grid Layout of Candidates cards */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
@@ -262,8 +370,9 @@ export default function CandidatesPage() {
           <p className="mt-2 text-sm text-neutral-400">Import a CSV of candidate emails or details to begin inviting them to secure exams.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {candidates.map((candidate) => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedCandidates.map((candidate) => (
             <div key={candidate.id} className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs flex flex-col justify-between hover:border-neutral-200 transition-colors">
               <div>
                 <div className="flex items-center gap-3">
@@ -335,6 +444,30 @@ export default function CandidatesPage() {
               </div>
             </div>
           ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-neutral-100 pt-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-medium text-neutral-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -344,10 +477,15 @@ export default function CandidatesPage() {
           <div className="w-full max-w-md rounded-2xl border border-neutral-100 bg-white p-6 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
               <h2 className="text-base font-bold text-neutral-800">
-                Invite {selectedCandidate.firstName} to Test
+                {assessmentToConfirm 
+                  ? 'Confirm Invitation' 
+                  : `Invite ${selectedCandidate.firstName} to Test`}
               </h2>
               <button
-                onClick={() => setShowInviteModal(false)}
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setAssessmentToConfirm(null);
+                }}
                 className="text-neutral-400 hover:text-neutral-600"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -356,16 +494,54 @@ export default function CandidatesPage() {
               </button>
             </div>
 
-            {assessments.length === 0 ? (
+            {assessmentToConfirm ? (
+              <div className="space-y-4 py-2">
+                <div className="rounded-lg bg-neutral-50 p-4 border border-neutral-100">
+                  <p className="text-sm text-neutral-700">
+                    You are about to invite <span className="font-bold text-neutral-900">{selectedCandidate.firstName} {selectedCandidate.lastName}</span> to take the following assessment:
+                  </p>
+                  <div className="mt-3 bg-white border border-neutral-200 rounded-md p-3">
+                    <h4 className="text-xs font-bold text-neutral-800">{assessmentToConfirm.title}</h4>
+                  </div>
+                  <p className="mt-3 text-xs text-neutral-500">
+                    An email will be sent immediately to <span className="font-medium text-neutral-700">{selectedCandidate.email}</span>.
+                  </p>
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => handleInviteToAssessment(assessmentToConfirm.id)}
+                    disabled={sendingInvite}
+                    className="flex-1 flex items-center justify-center rounded-lg bg-brand-green py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {sendingInvite ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </>
+                    ) : 'Confirm & Send Email'}
+                  </button>
+                  <button
+                    onClick={() => setAssessmentToConfirm(null)}
+                    disabled={sendingInvite}
+                    className="flex-1 rounded-lg border border-neutral-200 bg-white py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    Back
+                  </button>
+                </div>
+              </div>
+            ) : eligibleAssessments.length === 0 ? (
               <p className="text-xs text-neutral-400 text-center py-4">
-                No active published assessments available. Please publish an assessment first.
+                No eligible published assessments available for this candidate.
               </p>
             ) : (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                {assessments.map((a) => (
+                {eligibleAssessments.map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => handleInviteToAssessment(a.id)}
+                    onClick={() => setAssessmentToConfirm(a)}
                     disabled={sendingInvite}
                     className="w-full text-left rounded-lg border border-neutral-100 p-3 hover:border-brand-green hover:bg-brand-green-light/20 transition-all flex items-center justify-between cursor-pointer"
                   >
