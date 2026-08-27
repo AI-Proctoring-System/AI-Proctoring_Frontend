@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex h-screen w-full bg-neutral-50/50 overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] w-full bg-neutral-50/50 overflow-hidden">
       {/* Recruiter Sidebar */}
       <Sidebar />
 
