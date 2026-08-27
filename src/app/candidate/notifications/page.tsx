@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiRequest } from '../../../utils/api';
@@ -35,7 +35,7 @@ export default function CandidateNotificationsPage() {
     }
   }, [isAuthenticated, isLoading, user, router]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await apiRequest<NotificationItem[]>('notifications');
       if (data) {
@@ -47,13 +47,16 @@ export default function CandidateNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toastError]);
 
   useEffect(() => {
     if (isAuthenticated && user?.role === 'CANDIDATE') {
-      loadNotifications();
+      const fetchList = async () => {
+        await loadNotifications();
+      };
+      fetchList();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, loadNotifications]);
 
   const handleMarkAsRead = async (id: string) => {
     try {

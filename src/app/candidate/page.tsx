@@ -126,7 +126,6 @@ export default function CandidatePortal() {
       try {
         const data = await apiRequest<ScheduledAttempt[]>('attempts/scheduled');
         if (data) {
-          const now = new Date();
           // Filter to only show PUBLISHED assessments, including past ones so they see it ended
           setInvitations(data.filter((item) => {
             if (item.assessment.status !== 'PUBLISHED') return false;

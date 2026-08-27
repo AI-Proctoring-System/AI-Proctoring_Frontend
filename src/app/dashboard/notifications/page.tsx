@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../../../utils/api';
 import { useToast } from '../../../context/ToastContext';
 
@@ -21,7 +20,7 @@ export default function CompanyNotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL');
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const data = await apiRequest<NotificationItem[]>('notifications');
       if (data) {
@@ -33,11 +32,14 @@ export default function CompanyNotificationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toastError]);
 
   useEffect(() => {
-    loadNotifications();
-  }, []);
+    const fetchList = async () => {
+      await loadNotifications();
+    };
+    fetchList();
+  }, [loadNotifications]);
 
   const handleMarkAsRead = async (id: string) => {
     try {

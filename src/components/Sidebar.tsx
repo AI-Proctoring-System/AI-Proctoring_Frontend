@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
-import Logo from './Logo';
 
 export default function Sidebar() {
   const pathname = usePathname();

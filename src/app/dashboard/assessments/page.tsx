@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { apiRequest } from '../../../utils/api';
 import { useToast } from '../../../context/ToastContext';
@@ -21,6 +21,33 @@ interface ValidationError {
   errors: string[];
 }
 
+interface ImportQuestionOption {
+  optionText: string;
+  optionLabel: string;
+  isCorrect: boolean;
+  orderNumber?: number;
+}
+
+interface ImportQuestion {
+  questionType?: string;
+  questionText?: string;
+  marks?: number;
+  orderNumber?: number;
+  options?: ImportQuestionOption[];
+}
+
+interface ImportAssessmentItem {
+  title: string;
+  description?: string;
+  assessmentType?: string;
+  durationMinutes?: number;
+  passingScore?: number;
+  instructions?: string;
+  allowedMaterials?: string[];
+  prohibitedMaterials?: string[];
+  questions?: ImportQuestion[];
+}
+
 export default function AssessmentsPage() {
   const { success: toastSuccess, error: toastError } = useToast();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -36,22 +63,25 @@ export default function AssessmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
-  const fetchAssessments = async () => {
+  const fetchAssessments = useCallback(async () => {
     try {
       const data = await apiRequest<Assessment[]>('assessments');
       if (data) {
         setAssessments(data);
       }
-    } catch (err) {
+    } catch {
       toastError('Failed to load assessments.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [toastError]);
 
   useEffect(() => {
-    fetchAssessments();
-  }, []);
+    const loadData = async () => {
+      await fetchAssessments();
+    };
+    loadData();
+  }, [fetchAssessments]);
 
   const confirmDelete = async () => {
     if (!deleteModalId) return;
@@ -89,18 +119,18 @@ export default function AssessmentsPage() {
     return result;
   };
 
-  const parseCSV = (text: string): any[] => {
+  const parseCSV = (text: string): ImportAssessmentItem[] => {
     const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
     if (lines.length < 2) return [];
 
     const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
-    const itemsMap: { [title: string]: any } = {};
+    const itemsMap: Record<string, ImportAssessmentItem> = {};
 
     for (let i = 1; i < lines.length; i++) {
       const row = parseCSVLine(lines[i]);
       if (row.length === 0) continue;
 
-      const rowObj: any = {};
+      const rowObj: Record<string, string> = {};
       headers.forEach((h, idx) => {
         rowObj[h] = row[idx] || '';
       });
@@ -132,13 +162,13 @@ export default function AssessmentsPage() {
         const optD = rowObj.optiond;
         const correct = (rowObj.correctoption || 'A').toUpperCase();
 
-        const options = [];
+        const options: ImportQuestionOption[] = [];
         if (optA) options.push({ optionText: optA, optionLabel: 'A', isCorrect: correct === 'A' || correct === '1' });
         if (optB) options.push({ optionText: optB, optionLabel: 'B', isCorrect: correct === 'B' || correct === '2' });
         if (optC) options.push({ optionText: optC, optionLabel: 'C', isCorrect: correct === 'C' || correct === '3' });
         if (optD) options.push({ optionText: optD, optionLabel: 'D', isCorrect: correct === 'D' || correct === '4' });
 
-        itemsMap[title].questions.push({
+        itemsMap[title].questions?.push({
           questionType: qType,
           questionText: qText,
           marks: isNaN(marks) ? 1 : marks,
@@ -151,7 +181,7 @@ export default function AssessmentsPage() {
   };
 
   // Validate items against requirements and existing database entries BEFORE uploading!
-  const validateImportData = (items: any[]): ValidationError[] => {
+  const validateImportData = (items: ImportAssessmentItem[]): ValidationError[] => {
     const errorList: ValidationError[] = [];
 
     items.forEach((item, index) => {
@@ -185,7 +215,7 @@ export default function AssessmentsPage() {
 
       // Requirement 5: Questions (if provided)
       if (Array.isArray(item.questions)) {
-        item.questions.forEach((q: any, qIdx: number) => {
+        item.questions.forEach((q: ImportQuestion, qIdx: number) => {
           if (!q.questionText || typeof q.questionText !== 'string' || q.questionText.trim() === '') {
             itemErrors.push(`Question #${qIdx + 1}: Missing question text.`);
           }
@@ -193,7 +223,7 @@ export default function AssessmentsPage() {
             if (!Array.isArray(q.options) || q.options.length < 2) {
               itemErrors.push(`Question #${qIdx + 1}: MCQ requires at least 2 options.`);
             } else {
-              const hasCorrect = q.options.some((opt: any) => opt.isCorrect);
+              const hasCorrect = q.options.some((opt: ImportQuestionOption) => opt.isCorrect);
               if (!hasCorrect) {
                 itemErrors.push(`Question #${qIdx + 1}: MCQ must specify at least one correct option.`);
               }
@@ -211,7 +241,7 @@ export default function AssessmentsPage() {
   };
 
   // Helper to deploy single assessment payload to backend
-  const deployAssessment = async (payload: any) => {
+  const deployAssessment = async (payload: ImportAssessmentItem) => {
     // 1. Create Assessment core
     const newAssessment = await apiRequest<{ id: string }>('assessments', {
       method: 'POST',
@@ -263,13 +293,13 @@ export default function AssessmentsPage() {
 
     // 4. Questions
     if (Array.isArray(payload.questions) && payload.questions.length > 0) {
-      const cleanedQuestions = payload.questions.map((q: any, idx: number) => ({
+      const cleanedQuestions = payload.questions.map((q: ImportQuestion, idx: number) => ({
         questionType: q.questionType || 'MCQ',
         questionText: q.questionText || 'Question text',
         marks: Number(q.marks) || 1,
         orderNumber: q.orderNumber || idx + 1,
         options: Array.isArray(q.options)
-          ? q.options.map((opt: any, optIdx: number) => ({
+          ? q.options.map((opt: ImportQuestionOption, optIdx: number) => ({
               optionText: opt.optionText || '',
               optionLabel: opt.optionLabel || String.fromCharCode(65 + optIdx),
               isCorrect: !!opt.isCorrect,
@@ -296,7 +326,7 @@ export default function AssessmentsPage() {
     reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
-        let items: any[] = [];
+        let items: ImportAssessmentItem[] = [];
 
         if (isCSV) {
           items = parseCSV(text);
@@ -345,7 +375,7 @@ export default function AssessmentsPage() {
           toastSuccess(`Successfully imported ${successCount} assessment(s)!`);
           await fetchAssessments();
         }
-      } catch (err) {
+      } catch {
         toastError('Failed to parse file. Please ensure it is a valid JSON or CSV format.');
       } finally {
         setImporting(false);
@@ -359,8 +389,8 @@ export default function AssessmentsPage() {
   // Export full single assessment to JSON
   const handleExportAssessment = async (id: string, title: string) => {
     try {
-      const details = await apiRequest<any>(`assessments/${id}`);
-      const questions = await apiRequest<any>(`assessments/${id}/questions`);
+      const details = await apiRequest<ImportAssessmentItem>(`assessments/${id}`);
+      const questions = await apiRequest<ImportQuestion[]>(`assessments/${id}/questions`);
 
       const exportData = {
         title: details?.title || title,
@@ -383,7 +413,7 @@ export default function AssessmentsPage() {
       link.click();
       document.body.removeChild(link);
       toastSuccess(`Exported "${title}" JSON package.`);
-    } catch (err) {
+    } catch {
       toastError('Failed to export assessment.');
     }
   };
@@ -399,8 +429,8 @@ export default function AssessmentsPage() {
     try {
       const allData = [];
       for (const a of assessments) {
-        const details = await apiRequest<any>(`assessments/${a.id}`);
-        const questions = await apiRequest<any>(`assessments/${a.id}/questions`);
+        const details = await apiRequest<ImportAssessmentItem>(`assessments/${a.id}`);
+        const questions = await apiRequest<ImportQuestion[]>(`assessments/${a.id}/questions`);
 
         allData.push({
           title: details?.title || a.title,
@@ -424,7 +454,7 @@ export default function AssessmentsPage() {
       link.click();
       document.body.removeChild(link);
       toastSuccess(`Successfully exported ${allData.length} assessments as a JSON array!`);
-    } catch (err) {
+    } catch {
       toastError('Failed to export all assessments.');
     } finally {
       setImporting(false);
