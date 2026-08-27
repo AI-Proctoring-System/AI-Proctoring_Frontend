@@ -18,8 +18,87 @@ interface ScheduledAttempt {
     durationMinutes: number;
     passingScore: number;
     examDate: string;
+    startTime: string;
     endTime: string;
   };
+}
+
+function AssessmentCard({ a }: { a: ScheduledAttempt }) {
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const startTime = new Date(a.assessment.startTime || a.assessment.examDate);
+  const endTime = new Date(a.assessment.endTime);
+  const isStarted = now >= startTime;
+  const isEnded = now >= endTime;
+
+  const timeDiff = startTime.getTime() - now.getTime();
+  let countdownText = '';
+  if (timeDiff > 0) {
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((timeDiff / 1000 / 60) % 60);
+    const seconds = Math.floor((timeDiff / 1000) % 60);
+    countdownText = `${days > 0 ? `${days}d ` : ''}${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  return (
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs hover:border-neutral-200 transition-colors">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-brand-green-light px-2 py-0.5 text-2xs font-semibold text-brand-green">
+            {a.assessment.assessmentType}
+          </span>
+          <span className="text-2xs text-neutral-400 font-semibold">
+            Invited
+          </span>
+        </div>
+        <h3 className="text-lg font-bold text-neutral-900">{a.assessment.title}</h3>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 font-medium pt-1">
+          <span>Duration: {a.assessment.durationMinutes} mins</span>
+          <span>•</span>
+          <span>Passing Score: {a.assessment.passingScore}%</span>
+          <span>•</span>
+          <span>Start: {startTime.toLocaleDateString()} {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        {!isStarted && (
+          <div className="pt-2 text-sm font-bold" style={{ color: '#4a5d4e' }}>
+            Starts in: {countdownText}
+          </div>
+        )}
+        <div className="text-xs text-neutral-400 mt-1 italic">
+          * Note: The test will not be accessible after {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.
+        </div>
+      </div>
+
+      {isEnded ? (
+        <button
+          disabled
+          className="w-full sm:w-auto text-center rounded-lg bg-neutral-100 px-5 py-2.5 text-sm font-semibold text-neutral-500 cursor-not-allowed border border-neutral-200"
+        >
+          Assessment Ended
+        </button>
+      ) : isStarted ? (
+        <Link
+          href={`/candidate/exam/${a.id}`}
+          className="w-full sm:w-auto text-center rounded-lg bg-brand-green px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors"
+        >
+          Start Verification
+        </Link>
+      ) : (
+        <button
+          disabled
+          className="w-full sm:w-auto text-center rounded-lg bg-neutral-200 px-5 py-2.5 text-sm font-semibold text-neutral-400 cursor-not-allowed"
+        >
+          Not Yet Available
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function CandidatePortal() {
@@ -48,10 +127,9 @@ export default function CandidatePortal() {
         const data = await apiRequest<ScheduledAttempt[]>('attempts/scheduled');
         if (data) {
           const now = new Date();
-          // Filter to only show active invites / in-progress assessments
+          // Filter to only show PUBLISHED assessments, including past ones so they see it ended
           setInvitations(data.filter((item) => {
             if (item.assessment.status !== 'PUBLISHED') return false;
-            if (item.assessment.endTime && new Date(item.assessment.endTime) < now) return false;
             return true;
           }));
         }
@@ -116,36 +194,7 @@ export default function CandidatePortal() {
         ) : (
           <div className="space-y-4">
             {invitations.map((a) => (
-              <div
-                key={a.id}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs hover:border-neutral-200 transition-colors"
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full bg-brand-green-light px-2 py-0.5 text-2xs font-semibold text-brand-green">
-                      {a.assessment.assessmentType}
-                    </span>
-                    <span className="text-2xs text-neutral-400 font-semibold">
-                      Invited
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-neutral-900">{a.assessment.title}</h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500 font-medium pt-1">
-                    <span>Duration: {a.assessment.durationMinutes} mins</span>
-                    <span>•</span>
-                    <span>Passing Score: {a.assessment.passingScore}%</span>
-                    <span>•</span>
-                    <span>Valid Date: {new Date(a.assessment.examDate).toLocaleDateString()}</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/candidate/exam/${a.id}`}
-                  className="w-full sm:w-auto text-center rounded-lg bg-brand-green px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors"
-                >
-                  Start Verification
-                </Link>
-              </div>
+              <AssessmentCard key={a.id} a={a} />
             ))}
           </div>
         )}

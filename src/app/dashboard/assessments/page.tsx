@@ -19,6 +19,11 @@ export default function AssessmentsPage() {
   const { success: toastSuccess, error: toastError } = useToast();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Search and Pagination State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
     const fetchAssessments = async () => {
@@ -38,6 +43,8 @@ export default function AssessmentsPage() {
     fetchAssessments();
   }, [toastError]);
 
+
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this assessment?')) return;
     try {
@@ -49,6 +56,22 @@ export default function AssessmentsPage() {
       toastError(errorVal.message || 'Failed to delete assessment.');
     }
   };
+
+  // Derived state for filtering and pagination
+  const filteredAssessments = assessments.filter((a) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      a.title.toLowerCase().includes(query) ||
+      a.assessmentType.toLowerCase().includes(query) ||
+      a.status.toLowerCase().includes(query)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredAssessments.length / itemsPerPage);
+  const paginatedAssessments = filteredAssessments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="space-y-6">
@@ -67,6 +90,25 @@ export default function AssessmentsPage() {
           </svg>
           Create Assessment
         </Link>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative max-w-md">
+        <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-400">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input
+          type="text"
+          placeholder="Search assessments by title, type, or status..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="block w-full rounded-lg border border-neutral-200 bg-white pl-10 pr-3 py-2 text-xs text-neutral-900 focus:border-brand-green focus:outline-none transition-colors shadow-xs"
+        />
       </div>
 
       {/* Grid List */}
@@ -94,8 +136,9 @@ export default function AssessmentsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {assessments.map((a) => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedAssessments.map((a) => (
             <div key={a.id} className="flex flex-col justify-between rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs hover:shadow-md transition-shadow">
               <div>
                 <div className="flex items-center justify-between">
@@ -154,6 +197,30 @@ export default function AssessmentsPage() {
               </div>
             </div>
           ))}
+          </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-neutral-100 pt-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-medium text-neutral-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

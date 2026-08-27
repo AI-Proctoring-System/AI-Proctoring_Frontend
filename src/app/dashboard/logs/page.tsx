@@ -32,6 +32,10 @@ export default function ProctoringLogsPage() {
   const [candidatesData, setCandidatesData] = useState<CandidateLogsSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
   // Fetch telemetry logs from backend
   useEffect(() => {
     async function loadLogs() {
@@ -61,6 +65,14 @@ export default function ProctoringLogsPage() {
     return matchesSearch && matchesRisk;
   });
 
+  const totalPages = Math.ceil(filteredCandidates.length / itemsPerPage);
+  const paginatedCandidates = filteredCandidates.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -84,7 +96,10 @@ export default function ProctoringLogsPage() {
             type="text"
             placeholder="Search candidate, email, or assessment..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-3 py-2 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:outline-none transition-colors"
           />
         </div>
@@ -94,7 +109,10 @@ export default function ProctoringLogsPage() {
           {(['ALL', 'CRITICAL', 'HIGH', 'LOW'] as const).map((filter) => (
             <button
               key={filter}
-              onClick={() => setRiskFilter(filter)}
+              onClick={() => {
+                setRiskFilter(filter);
+                setCurrentPage(1);
+              }}
               className={`rounded-lg px-3 py-1 text-3xs font-bold transition-all cursor-pointer ${
                 riskFilter === filter
                   ? 'bg-white text-neutral-800 shadow-xs border border-neutral-100'
@@ -124,8 +142,9 @@ export default function ProctoringLogsPage() {
           <p className="mt-2 text-sm text-neutral-400">No telemetry data matches your current search/filter settings.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredCandidates.map((c) => {
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {paginatedCandidates.map((c) => {
             const initials = c.name ? c.name.split(' ').map((n) => n[0]).join('') : '?';
             return (
               <div key={c.id} className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs flex flex-col justify-between hover:border-neutral-200 transition-colors">
@@ -197,6 +216,30 @@ export default function ProctoringLogsPage() {
               </div>
             );
           })}
+          </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-neutral-100 pt-4">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-medium text-neutral-500">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
