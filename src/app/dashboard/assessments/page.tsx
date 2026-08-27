@@ -43,10 +43,7 @@ export default function AssessmentsPage() {
     fetchAssessments();
   }, [toastError]);
 
-  // Reset to page 1 on search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this assessment?')) return;
@@ -106,7 +103,10 @@ export default function AssessmentsPage() {
           type="text"
           placeholder="Search assessments by title, type, or status..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setCurrentPage(1);
+          }}
           className="block w-full rounded-lg border border-neutral-200 bg-white pl-10 pr-3 py-2 text-xs text-neutral-900 focus:border-brand-green focus:outline-none transition-colors shadow-xs"
         />
       </div>

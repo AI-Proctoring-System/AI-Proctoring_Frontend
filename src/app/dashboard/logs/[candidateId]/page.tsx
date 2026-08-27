@@ -66,10 +66,7 @@ export default function CandidateLogsPage() {
     loadCandidateLog();
   }, [candidateId, toastError, router]);
 
-  // Reset to page 1 on search change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+
 
   if (loading) {
     return (
@@ -190,7 +187,10 @@ export default function CandidateLogsPage() {
                 type="text"
                 placeholder="Search events..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-9 pr-3 py-1.5 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:outline-none transition-colors"
               />
             </div>

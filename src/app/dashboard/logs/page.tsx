@@ -71,10 +71,7 @@ export default function ProctoringLogsPage() {
     currentPage * itemsPerPage
   );
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, riskFilter]);
+
 
   return (
     <div className="space-y-6">
@@ -99,7 +96,10 @@ export default function ProctoringLogsPage() {
             type="text"
             placeholder="Search candidate, email, or assessment..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-10 pr-3 py-2 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:outline-none transition-colors"
           />
         </div>
@@ -109,7 +109,10 @@ export default function ProctoringLogsPage() {
           {(['ALL', 'CRITICAL', 'HIGH', 'LOW'] as const).map((filter) => (
             <button
               key={filter}
-              onClick={() => setRiskFilter(filter)}
+              onClick={() => {
+                setRiskFilter(filter);
+                setCurrentPage(1);
+              }}
               className={`rounded-lg px-3 py-1 text-3xs font-bold transition-all cursor-pointer ${
                 riskFilter === filter
                   ? 'bg-white text-neutral-800 shadow-xs border border-neutral-100'
