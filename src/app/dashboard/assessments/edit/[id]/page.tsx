@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
 import { apiRequest } from '@/utils/api';
 import { useToast } from '@/context/ToastContext';
+import { TIME_SLOTS, getTimeLabel } from '@/utils/time';
 
 interface MCQQuestion {
   id?: string;
@@ -422,6 +424,15 @@ export default function EditAssessmentPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
+        <Link
+          href="/dashboard/assessments"
+          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-green-light via-[#e2ebe6] to-brand-green-light border border-brand-green-border px-3.5 py-1.5 text-xs font-bold text-brand-green hover:from-brand-green-light/80 hover:to-brand-green-light/40 transition-all shadow-2xs mb-3 cursor-pointer"
+        >
+          <svg className="h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to assessments
+        </Link>
         <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Edit Assessment</h1>
         <p className="mt-1 text-sm text-neutral-500">Edit assessment configuration, proctoring parameters, and questions.</p>
       </div>
@@ -584,13 +595,13 @@ export default function EditAssessmentPage() {
                   <button
                     type="button"
                     onClick={handleExportQuestionsCsv}
-                    className="inline-flex justify-center items-center rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-colors cursor-pointer"
+                    className="inline-flex justify-center items-center rounded-lg border border-brand-green bg-white px-3 py-1.5 text-xs font-bold text-brand-green hover:bg-brand-green-light/20 transition-colors cursor-pointer shadow-xs"
                   >
                     Export CSV
                   </button>
 
                   {/* Import CSV */}
-                  <label className="inline-flex justify-center items-center rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-600 hover:bg-neutral-50 transition-colors cursor-pointer">
+                  <label className="inline-flex justify-center items-center rounded-lg border border-brand-green bg-white px-3 py-1.5 text-xs font-bold text-brand-green hover:bg-brand-green-light/20 transition-colors cursor-pointer shadow-xs">
                     Import CSV
                     <input
                       type="file"
@@ -757,12 +768,16 @@ export default function EditAssessmentPage() {
 
             {/* Schedule */}
             <div className="rounded-2xl border border-neutral-100 bg-white p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-neutral-800 border-b border-neutral-50 pb-2">4. Scheduling</h2>
-              <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-neutral-50 pb-2">
+                <h2 className="text-base font-bold text-neutral-800">4. Scheduling</h2>
+                <span className="text-3xs font-bold uppercase tracking-wider text-brand-green bg-brand-green-light px-2.5 py-1 rounded-md border border-brand-green-border">Time Window</span>
+              </div>
+
+              <div className="space-y-4">
                 {/* Date */}
                 <div>
-                  <label htmlFor="date" className="block text-xs font-semibold text-neutral-500">
-                    Exam Date
+                  <label htmlFor="date" className="block text-xs font-semibold text-neutral-600 mb-1.5">
+                    Exam Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     id="date"
@@ -770,36 +785,55 @@ export default function EditAssessmentPage() {
                     required
                     value={examDate}
                     onChange={(e) => setExamDate(e.target.value)}
-                    className="mt-2 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none"
+                    className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs font-medium text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-all cursor-pointer"
                   />
                 </div>
-                {/* Start Time */}
-                <div>
-                  <label htmlFor="start" className="block text-xs font-semibold text-neutral-500">
-                    Start Window
-                  </label>
-                  <input
-                    id="start"
-                    type="time"
-                    required
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="mt-2 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none"
-                  />
-                </div>
-                {/* End Time */}
-                <div>
-                  <label htmlFor="end" className="block text-xs font-semibold text-neutral-500">
-                    End Window
-                  </label>
-                  <input
-                    id="end"
-                    type="time"
-                    required
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="mt-2 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none"
-                  />
+
+                {/* Start & End Window Aligned Side-by-Side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {/* Start Time */}
+                  <div>
+                    <label htmlFor="start" className="block text-xs font-semibold text-neutral-600 mb-1.5">
+                      Start Window <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="start"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs font-semibold text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-all cursor-pointer"
+                    >
+                      {TIME_SLOTS.map((slot) => (
+                        <option key={`start-${slot.value}`} value={slot.value}>
+                          {slot.label}
+                        </option>
+                      ))}
+                      {!TIME_SLOTS.some(s => s.value === startTime) && (
+                        <option value={startTime}>{getTimeLabel(startTime)}</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* End Time */}
+                  <div>
+                    <label htmlFor="end" className="block text-xs font-semibold text-neutral-600 mb-1.5">
+                      End Window <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="end"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2 text-xs font-semibold text-neutral-900 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-all cursor-pointer"
+                    >
+                      {TIME_SLOTS.map((slot) => (
+                        <option key={`end-${slot.value}`} value={slot.value}>
+                          {slot.label}
+                        </option>
+                      ))}
+                      {!TIME_SLOTS.some(s => s.value === endTime) && (
+                        <option value={endTime}>{getTimeLabel(endTime)}</option>
+                      )}
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../../../utils/api';
 import { useToast } from '../../../context/ToastContext';
+import ConfirmModal from '../../../components/ConfirmModal';
 
 interface Candidate {
   id: string;
@@ -32,6 +33,10 @@ export default function CandidatesPage() {
   const [assessmentToConfirm, setAssessmentToConfirm] = useState<Assessment | null>(null);
   const [sendingInvite, setSendingInvite] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Styled Delete Modal State
+  const [deleteCandidateId, setDeleteCandidateId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Search and Pagination State
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,8 +108,10 @@ export default function CandidatesPage() {
     }
   };
 
-  const handleDeleteCandidate = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this candidate? This will remove all their invitations and exam attempts.')) return;
+  const confirmDeleteCandidate = async () => {
+    if (!deleteCandidateId) return;
+    setIsDeleting(true);
+    const id = deleteCandidateId;
     
     // Check if it's a local pending candidate
     const localPending = JSON.parse(localStorage.getItem('pendingCandidates') || '[]');
@@ -115,6 +122,8 @@ export default function CandidatesPage() {
       localStorage.setItem('pendingCandidates', JSON.stringify(updatedLocalPending));
       setCandidates(prev => prev.filter(c => c.id !== id));
       toastSuccess('Candidate deleted successfully.');
+      setIsDeleting(false);
+      setDeleteCandidateId(null);
       return;
     }
 
@@ -125,6 +134,9 @@ export default function CandidatesPage() {
     } catch (err) {
       const errorVal = err as Error;
       toastError(errorVal.message || 'Failed to delete candidate.');
+    } finally {
+      setIsDeleting(false);
+      setDeleteCandidateId(null);
     }
   };
 
@@ -310,17 +322,17 @@ export default function CandidatesPage() {
           {/* Export */}
           <button
             onClick={handleCsvExport}
-            className="inline-flex justify-center items-center rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-700 shadow-xs hover:bg-neutral-50 transition-colors cursor-pointer"
+            className="inline-flex justify-center items-center rounded-lg border border-brand-green bg-white px-4 py-2 text-sm font-semibold text-brand-green shadow-xs hover:bg-brand-green-light/20 transition-colors cursor-pointer"
           >
-            <svg className="mr-1.5 h-4 w-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="mr-1.5 h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Export List
           </button>
 
           {/* Import file label wrapper */}
-          <label className="inline-flex justify-center items-center rounded-lg bg-brand-green px-4 py-2 text-sm font-semibold text-white shadow-xs hover:bg-brand-green-hover transition-colors cursor-pointer">
-            <svg className="mr-1.5 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <label className="inline-flex justify-center items-center rounded-lg border border-brand-green bg-white px-4 py-2 text-sm font-semibold text-brand-green shadow-xs hover:bg-brand-green-light/20 transition-colors cursor-pointer">
+            <svg className="mr-1.5 h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             Import CSV
@@ -397,7 +409,7 @@ export default function CandidatesPage() {
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDeleteCandidate(candidate.id)}
+                      onClick={() => setDeleteCandidateId(candidate.id)}
                       className="rounded-md p-1 text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       title="Delete Candidate"
                     >
@@ -511,49 +523,49 @@ export default function CandidatesPage() {
                   <button
                     onClick={() => handleInviteToAssessment(assessmentToConfirm.id)}
                     disabled={sendingInvite}
-                    className="flex-1 flex items-center justify-center rounded-lg bg-brand-green py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg bg-brand-green py-2 text-xs font-semibold text-white shadow-sm hover:bg-brand-green-hover transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    {sendingInvite ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Sending...
-                      </>
-                    ) : 'Confirm & Send Email'}
+                    {sendingInvite && (
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    )}
+                    Send Invitation
                   </button>
                   <button
+                    type="button"
                     onClick={() => setAssessmentToConfirm(null)}
-                    disabled={sendingInvite}
-                    className="flex-1 rounded-lg border border-neutral-200 bg-white py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-lg border border-neutral-200 bg-white py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition-colors"
                   >
-                    Back
+                    Back to List
                   </button>
                 </div>
               </div>
-            ) : eligibleAssessments.length === 0 ? (
-              <p className="text-xs text-neutral-400 text-center py-4">
-                No eligible published assessments available for this candidate.
-              </p>
             ) : (
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                {eligibleAssessments.map((a) => (
-                  <button
-                    key={a.id}
-                    onClick={() => setAssessmentToConfirm(a)}
-                    disabled={sendingInvite}
-                    className="w-full text-left rounded-lg border border-neutral-100 p-3 hover:border-brand-green hover:bg-brand-green-light/20 transition-all flex items-center justify-between cursor-pointer"
-                  >
-                    <div>
-                      <h4 className="text-xs font-bold text-neutral-800">{a.title}</h4>
-                      <p className="text-3xs text-neutral-400 uppercase mt-0.5">Status: {a.status}</p>
-                    </div>
-                    <svg className="h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                ))}
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                {eligibleAssessments.length === 0 ? (
+                  <p className="text-xs text-neutral-400 py-4 text-center">
+                    No active or pending assessments available to invite.
+                  </p>
+                ) : (
+                  eligibleAssessments.map((a) => (
+                    <button
+                      key={a.id}
+                      onClick={() => setAssessmentToConfirm(a)}
+                      disabled={sendingInvite}
+                      className="w-full text-left rounded-lg border border-neutral-100 p-3 hover:border-brand-green hover:bg-brand-green-light/20 transition-all flex items-center justify-between cursor-pointer"
+                    >
+                      <div>
+                        <h4 className="text-xs font-bold text-neutral-800">{a.title}</h4>
+                        <p className="text-3xs text-neutral-400 uppercase mt-0.5">Status: {a.status}</p>
+                      </div>
+                      <svg className="h-4 w-4 text-brand-green" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -629,6 +641,17 @@ export default function CandidatesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Candidate Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!deleteCandidateId}
+        title="Delete Candidate"
+        message="Are you sure you want to delete this candidate? This action cannot be undone and will remove all their invitations and exam attempts."
+        confirmText="Yes, Delete Candidate"
+        isLoading={isDeleting}
+        onConfirm={confirmDeleteCandidate}
+        onCancel={() => setDeleteCandidateId(null)}
+      />
     </div>
   );
 }

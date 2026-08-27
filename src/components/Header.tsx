@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
+import NotificationIcon from './NotificationIcon';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -54,6 +55,7 @@ export default function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated && !isLandingPage ? (
             <div className="flex items-center gap-4">
+              <NotificationIcon />
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-green-light text-brand-green font-semibold text-xs border border-brand-green-border">
                   {getInitials(user?.company?.name || user?.email)}

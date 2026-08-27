@@ -22,3 +22,35 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Hero monitoring-frame + event-ticker animations */
+@keyframes ticker-scroll {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes scan-sweep {
+
+  0%,
+  100% {
+    top: 8%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  50% {
+    top: 88%;
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+}
