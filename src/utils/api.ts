@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export interface DecodedToken {
   sub: string;
@@ -29,10 +29,10 @@ export async function apiRequest<T = unknown>(
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}/${endpoint.replace(/^\//, '')}`;
-  
+
   // Get token from localStorage
   const token = typeof window !== 'undefined' ? localStorage.getItem('proctor_token') : null;
-  
+
   const headers = new Headers(options.headers);
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
