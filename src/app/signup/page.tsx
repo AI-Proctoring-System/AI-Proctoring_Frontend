@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { apiRequest } from '../../utils/api';
-import Logo from '../../components/Logo';
 
 export default function SignupPage() {
   const { login, isAuthenticated } = useAuth();
@@ -21,7 +20,8 @@ export default function SignupPage() {
   const [companyName, setCompanyName] = useState('');
   const [logoDataUrl, setLogoDataUrl] = useState<string | undefined>(undefined);
   const [showPassword, setShowPassword] = useState(false);
-  
+  const [termsAccepted, setTermsAccepted] = useState(true);
+
   // Interface states
   const [isLoading, setIsLoading] = useState(false);
   const [emailChecking, setEmailChecking] = useState(false);
@@ -50,7 +50,9 @@ export default function SignupPage() {
 
       setEmailChecking(true);
       try {
-        const response = await apiRequest<{ exists: boolean }>(`auth/check-email?email=${encodeURIComponent(email)}`);
+        const response = await apiRequest<{ exists: boolean }>(
+          `auth/check-email?email=${encodeURIComponent(email)}`
+        );
         setEmailExists(response.exists);
         if (response.exists) {
           toastWarning('This email is already registered to a company.');
@@ -105,6 +107,11 @@ export default function SignupPage() {
       return;
     }
 
+    if (!termsAccepted) {
+      toastError('Please agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
+
     if (password.length < 8) {
       toastError('Password must be at least 8 characters long.');
       return;
@@ -145,140 +152,207 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-neutral-50/50 px-4 py-16 sm:px-6 lg:px-8">
-      <div className="w-full max-w-xl space-y-8 rounded-2xl border border-neutral-100 bg-white p-8 shadow-sm">
-        {/* Header */}
-        <div className="flex flex-col items-center justify-center text-center">
-          <Logo size={40} className="mb-4" />
-          <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
-            Create your company account
-          </h2>
-          <p className="mt-2 text-sm text-neutral-500">
-            Start protecting the integrity of your examinations with AI.
-          </p>
-        </div>
+    <div className="flex-1 flex flex-col justify-center items-center py-10 px-4 sm:px-6 relative overflow-hidden bg-[#f1f6f3]">
+      {/* Background Ambient Glow & Motifs */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-40">
+        <div className="w-[700px] h-[700px] rounded-full bg-[#e9f0ec] blur-3xl -top-40 -right-20 absolute" />
+        <div className="w-[600px] h-[600px] rounded-full bg-[#dbe8e1] blur-3xl -bottom-20 -left-20 absolute" />
+      </div>
 
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            
-            {/* Grid for Name fields */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Central Registration Card Container */}
+      <div className="w-full max-w-[620px] relative z-10 my-4">
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl border border-[#ccdcd5]/80 p-7 sm:p-10 shadow-[0_20px_45px_-15px_rgba(31,51,43,0.12),0_0_1px_1px_rgba(45,74,62,0.08)] transition-all">
+          {/* Card Header */}
+          <div className="text-center mb-7">
+            <div className="inline-flex items-center justify-center mb-3">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#e9f0ec] border border-[#ccdcd5] text-xs font-semibold text-[#2d4a3e] tracking-wide">
+                <svg
+                  className="w-4 h-4 text-[#2d4a3e]"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <circle cx="12" cy="11" r="2.5" />
+                </svg>
+                <span>INSTITUTIONAL PORTAL</span>
+              </div>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mb-2">
+              Create your company account
+            </h1>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
+              Start protecting the integrity of your examinations with automated AI proctoring.
+            </p>
+          </div>
+
+          {/* Registration Form */}
+          <form className="space-y-4" onSubmit={handleSubmit}>
+            {/* Name Inputs (2-Column Grid) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="first-name" className="block text-sm font-medium text-neutral-700">
+                <label
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  htmlFor="first-name"
+                >
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="first-name"
+                  name="first-name"
                   type="text"
                   required
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-colors"
                   placeholder="John"
+                  className="w-full rounded-lg border border-slate-300 bg-white/90 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/20"
                 />
               </div>
               <div>
-                <label htmlFor="last-name" className="block text-sm font-medium text-neutral-700">
+                <label
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                  htmlFor="last-name"
+                >
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="last-name"
+                  name="last-name"
                   type="text"
                   required
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  className="mt-1 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-colors"
                   placeholder="Doe"
+                  className="w-full rounded-lg border border-slate-300 bg-white/90 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/20"
                 />
               </div>
             </div>
 
-            {/* Company details */}
+            {/* Company / University Name */}
             <div>
-              <label htmlFor="company-name" className="block text-sm font-medium text-neutral-700">
-                Company Name <span className="text-red-500">*</span>
+              <label
+                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                htmlFor="company-name"
+              >
+                Company / Institution Name <span className="text-red-500">*</span>
               </label>
               <input
                 id="company-name"
+                name="company-name"
                 type="text"
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-colors"
-                placeholder="Acme Corporation"
+                placeholder="Acme Corporation or Cambridge Academy"
+                className="w-full rounded-lg border border-slate-300 bg-white/90 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/20"
               />
             </div>
 
-            {/* Logo Upload Section */}
+            {/* Company Logo Upload Zone */}
             <div>
-              <label className="block text-sm font-medium text-neutral-700">
-                Company Logo <span className="text-xs text-neutral-400">(Optional)</span>
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                Company Logo <span className="text-slate-400 lowercase font-normal">(optional)</span>
               </label>
-              <div className="mt-1 flex items-center gap-4 rounded-lg border border-dashed border-neutral-200 p-4">
+              <div className="relative flex items-center gap-4 rounded-xl border border-dashed border-[#ccdcd5] bg-[#e9f0ec]/40 p-3.5 hover:bg-[#e9f0ec]/60 transition">
+                {/* Upload Thumbnail Preview */}
                 {logoDataUrl ? (
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-lg border border-neutral-100 bg-neutral-50 p-1">
+                  <div className="relative flex-shrink-0 w-12 h-12 rounded-lg bg-white border border-[#ccdcd5] flex items-center justify-center p-1 shadow-sm">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={logoDataUrl}
                       alt="Logo preview"
-                      className="max-h-full max-w-full rounded-md object-contain"
+                      className="max-h-full max-w-full rounded object-contain"
                     />
                     <button
                       type="button"
                       onClick={handleRemoveLogo}
-                      className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                      className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors shadow-xs"
                       title="Remove Logo"
                     >
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
                 ) : (
-                  <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-400">
-                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-white border border-[#ccdcd5]/80 flex items-center justify-center text-slate-400 shadow-sm">
+                    <svg className="w-6 h-6 text-[#2d4a3e]/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="1.7"
+                      />
                     </svg>
                   </div>
                 )}
-                <div className="flex-1 text-sm">
-                  <input
-                    type="file"
-                    id="logo-upload"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="logo-upload"
-                    className="inline-flex cursor-pointer items-center justify-center rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-sm hover:bg-neutral-50 transition-colors"
-                  >
-                    Select Logo
-                  </label>
-                  <p className="mt-1 text-xs text-neutral-400">PNG, JPG, SVG up to 2MB. Automatically resized.</p>
+
+                {/* Upload CTA & Instructions */}
+                <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label
+                      htmlFor="logo-upload"
+                      className="cursor-pointer inline-flex items-center px-3 py-1.5 rounded-md text-xs font-medium bg-white text-[#2d4a3e] border border-[#ccdcd5] hover:bg-slate-50 transition shadow-xs"
+                    >
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                        />
+                      </svg>
+                      Select Logo
+                    </label>
+                    <input
+                      id="logo-upload"
+                      type="file"
+                      accept="image/png, image/jpeg, image/svg+xml"
+                      onChange={handleLogoChange}
+                      className="sr-only"
+                    />
+                    <p className="text-[11px] text-slate-500 mt-1">PNG, JPG, SVG up to 2MB. Automatically resized.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Email field */}
+            {/* Email Address Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700">
-                Email Address <span className="text-red-500">*</span>
+              <label
+                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                htmlFor="email"
+              >
+                Work Email Address <span className="text-red-500">*</span>
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-1 block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-colors"
-                placeholder="name@company.com"
-              />
-              {/* Real-time Email check UI indicators */}
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full rounded-lg border border-slate-300 bg-white/90 pl-3.5 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/20"
+                />
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Email Availability Indicators */}
               {emailChecking && (
                 <p className="mt-1 text-xs text-neutral-500 flex items-center gap-1.5">
-                  <svg className="animate-spin h-3.5 w-3.5 text-brand-green" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin h-3.5 w-3.5 text-[#2d4a3e]" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
@@ -291,78 +365,129 @@ export default function SignupPage() {
                 </p>
               )}
               {!emailChecking && emailExists === false && (
-                <p className="mt-1 text-xs text-brand-green font-semibold flex items-center gap-1">
+                <p className="mt-1 text-xs text-[#2d4a3e] font-semibold flex items-center gap-1">
                   <span>✓ Email is available.</span>
                 </p>
               )}
             </div>
 
-            {/* Password field */}
+            {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
-                Password <span className="text-red-500">*</span>
-              </label>
-              <div className="relative mt-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
+                  htmlFor="password"
+                >
+                  Password <span className="text-red-500">*</span>
+                </label>
+                <span className="text-[11px] text-slate-500 font-medium">Minimum 8 characters</span>
+              </div>
+              <div className="relative">
                 <input
                   id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 pr-10 text-sm text-neutral-900 placeholder-neutral-400 focus:border-brand-green focus:bg-white focus:ring-1 focus:ring-brand-green focus:outline-none transition-colors"
-                  placeholder="•••••••• (Min 8 characters)"
+                  placeholder="••••••••"
+                  className="w-full rounded-lg border border-slate-300 bg-white/90 pl-3.5 pr-10 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition focus:outline-none focus:border-[#2d4a3e] focus:ring-2 focus:ring-[#2d4a3e]/20"
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3"
-                  tabIndex={-1}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-[#2d4a3e] focus:outline-none transition-colors"
                 >
                   {showPassword ? (
-                    <svg className="h-5 w-5 text-neutral-400 hover:text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   ) : (
-                    <svg className="h-5 w-5 text-neutral-400 hover:text-neutral-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
                     </svg>
                   )}
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Submit Button */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading || emailChecking || emailExists === true}
-              className="group relative flex w-full justify-center rounded-lg bg-brand-green py-2.5 px-4 text-sm font-semibold text-white shadow-xs transition-colors hover:bg-brand-green-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-green disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Registering...
-                </span>
-              ) : (
-                'Register Company'
-              )}
-            </button>
-          </div>
-        </form>
+            {/* Terms Checkbox Notice */}
+            <div className="flex items-start pt-1">
+              <div className="flex items-center h-5">
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  required
+                  className="h-4 w-4 rounded border-slate-300 text-[#2d4a3e] focus:ring-[#2d4a3e]"
+                />
+              </div>
+              <div className="ml-2.5 text-xs text-slate-600">
+                <label htmlFor="terms">
+                  I agree to the{' '}
+                  <Link href="/terms" className="font-medium text-[#2d4a3e] hover:underline">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="font-medium text-[#2d4a3e] hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </label>
+              </div>
+            </div>
 
-        {/* Footer info */}
-        <div className="text-center text-sm text-neutral-500 mt-6">
-          Already registered?{' '}
-          <Link href="/login" className="font-semibold text-brand-green hover:underline">
-            Sign in here
-          </Link>
+            {/* Submit Action Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading || emailChecking || emailExists === true}
+                className="w-full py-3 px-4 rounded-lg bg-[#2d4a3e] hover:bg-[#1f332b] text-white font-semibold text-sm sm:text-base tracking-wide shadow-md shadow-[#2d4a3e]/25 hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Registering Company...
+                  </span>
+                ) : (
+                  'Register Company'
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Footer note */}
+          <div className="mt-6 pt-5 border-t border-[#ccdcd5]/60 text-center">
+            <div className="text-xs text-slate-500">
+              Already have an account?{' '}
+              <Link
+                href="/login"
+                className="font-semibold text-[#2d4a3e] hover:text-[#1f332b] hover:underline ml-1"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
         </div>
+
+        {/* Micro Copyright / Footer Note */}
+        <p className="text-center text-xs text-slate-500/80 mt-6 font-medium">
+          © {new Date().getFullYear()} ProctorAI Technologies Inc. All rights reserved.
+        </p>
       </div>
     </div>
   );
 }
+
