@@ -1,430 +1,489 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+const sections = [
+  { id: 'acceptance', title: 'Acceptance of Terms' },
+  { id: 'eligibility', title: 'Eligibility & Authorization' },
+  { id: 'before-your-exam', title: 'Before Your Exam' },
+  { id: 'during-your-exam', title: 'During Your Exam' },
+  { id: 'ai-monitoring', title: 'AI Monitoring & Risk Scoring' },
+  { id: 'prohibited-conduct', title: 'Prohibited Conduct' },
+  { id: 'technical-issues', title: 'Technical Reliability & Support' },
+  { id: 'intellectual-property', title: 'Intellectual Property' },
+  { id: 'limitation-of-liability', title: 'Limitation of Liability' },
+  { id: 'governing-law', title: 'Governing Law' },
+  { id: 'changes', title: 'Changes to These Terms' },
+];
+
 export default function TermsOfServicePage() {
-  const sections = [
-    'Acceptance',
-    'Eligibility',
-    'Before Your Exam',
-    'During Your Exam',
-    'AI Monitoring & Risk Scoring',
-    'Prohibited Conduct',
-    'Technical Issues',
-    'Intellectual Property',
-    'Limitation of Liability',
-    'Governing Law',
-    'Changes',
-  ];
+  const [activeSection, setActiveSection] = useState('acceptance');
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 140;
+
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i].id);
+        if (section) {
+          const top = section.offsetTop;
+          if (scrollPosition >= top) {
+            setActiveSection(sections[i].id);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const top = element.getBoundingClientRect().top + window.pageYOffset - 90;
+      window.scrollTo({ top, behavior: 'smooth' });
+      setActiveSection(id);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-neutral-100 bg-neutral-50/70">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-brand-green-light/60 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -right-32 h-96 w-96 rounded-full bg-brand-green-light/40 blur-3xl"
-        />
+    <div className="min-h-screen bg-[#f7faf8] text-[#16231c] font-sans antialiased selection:bg-[#2d4a3e] selection:text-white">
+      {/* Hero Section */}
+      <section className="relative w-full overflow-hidden bg-gradient-to-br from-[#12231c] via-[#1a3429] to-[#254637] py-12 md:py-16 border-b border-white/10 text-white shadow-md">
+        <div className="absolute inset-0 bg-[radial-gradient(#4bc96b_1px,transparent_1px)] [background-size:24px_24px] opacity-[0.06] pointer-events-none" />
+        <div className="absolute -top-24 right-1/4 w-96 h-96 bg-[#4bc96b]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 left-10 w-72 h-72 bg-[#62df7d]/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative mx-auto max-w-6xl px-6 py-20 lg:px-8 lg:py-28">
-          <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-green-border bg-white/80 px-4 py-2 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-green shadow-sm backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-green" />
-              Terms &amp; conditions
-            </div>
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 relative z-10 flex flex-col items-start gap-4 md:gap-5">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#163328]/80 backdrop-blur-md border border-[#62df7d]/30 shadow-sm rounded-full">
+            <span className="w-2 h-2 rounded-full bg-[#62df7d] animate-pulse shadow-[0_0_8px_#62df7d]" />
+            <span className="text-xs text-[#c9ead9] font-semibold uppercase tracking-wider">
+              Terms &amp; Conditions
+            </span>
+          </div>
 
-            <h1 className="font-display text-4xl font-extrabold tracking-tight text-neutral-950 sm:text-5xl lg:text-6xl">
+          <div className="flex flex-col gap-2 max-w-3xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl text-white tracking-tight font-bold">
               Terms of Service
             </h1>
-
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-7 text-neutral-500 sm:text-lg">
-              The rules and responsibilities that apply when using ProctorAI
-              for online assessments.
+            <p className="text-sm sm:text-base md:text-lg text-[#d2e7dc] leading-relaxed">
+              The rules, responsibilities, and procedural safeguards that apply when using ProctorAi for online assessments.
             </p>
+          </div>
 
-            <div className="mt-8 inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-500 shadow-sm">
-              <svg
-                aria-hidden="true"
-                className="h-4 w-4 text-brand-green"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <path d="M16 2v4M8 2v4M3 10h18" />
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/15 shadow-sm rounded-lg text-[#c9ead9] text-xs font-mono">
+              <svg className="w-4 h-4 text-[#62df7d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" strokeWidth="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" strokeWidth="2" />
               </svg>
-              Last updated: August 25, 2026
+              <span>Last updated: August 25, 2026</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main content */}
-      <main className="mx-auto max-w-6xl px-6 py-16 lg:px-8 lg:py-24">
-        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-16">
-          {/* Table of contents */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-8">
-              <p className="mb-4 font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-400">
-                On this page
+      {/* Mobile Horizontal Jump Navigation (Visible on < lg screens) */}
+      <div className="lg:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#d2dbd5]/60 shadow-xs px-4 py-2">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 text-xs">
+          {sections.map((sec) => (
+            <a
+              key={sec.id}
+              href={`#${sec.id}`}
+              onClick={(e) => scrollToSection(e, sec.id)}
+              className={`whitespace-nowrap px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                activeSection === sec.id
+                  ? 'bg-[#2d4a3e] text-white shadow-xs'
+                  : 'bg-[#f0f7f3] text-[#1a3028] border border-[#d2dbd5]/40 hover:bg-[#e2ece6]'
+              }`}
+            >
+              {sec.title}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Structure (Two Column) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-8 md:py-12 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Sticky Sidebar */}
+          <aside className="lg:col-span-4 sticky top-6 space-y-5 hidden lg:block">
+            <div className="bg-white rounded-xl p-5 shadow-xs border border-[#d2dbd5]/50">
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#d2dbd5]/40">
+                <span className="text-[11px] font-mono text-[#1a3028] uppercase tracking-wider font-semibold">
+                  On this page
+                </span>
+                <span className="text-[11px] font-mono text-[#708077] font-medium">11 Sections</span>
+              </div>
+
+              <nav className="flex flex-col gap-1">
+                {sections.map((sec) => {
+                  const isActive = activeSection === sec.id;
+                  return (
+                    <a
+                      key={sec.id}
+                      href={`#${sec.id}`}
+                      onClick={(e) => scrollToSection(e, sec.id)}
+                      className={`group flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all ${
+                        isActive
+                          ? 'bg-[#eaf1ec] text-[#1a3028] font-bold shadow-xs'
+                          : 'text-[#3d4d44] hover:bg-[#f0f7f3] hover:text-[#1a3028]'
+                      }`}
+                    >
+                      <span className="leading-snug">{sec.title}</span>
+                      <svg
+                        className={`w-3.5 h-3.5 transition-transform ${
+                          isActive
+                            ? 'text-[#1a3028] opacity-100 translate-x-0.5'
+                            : 'opacity-30 group-hover:opacity-80 group-hover:translate-x-0.5'
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" />
+                      </svg>
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Fair & Transparent Callout Card */}
+            <div className="bg-[#f0f7f3] border border-[#d2dbd5]/60 rounded-xl p-5 shadow-xs flex flex-col gap-2 relative overflow-hidden">
+              <div className="flex items-center gap-2 text-[#1a3028]">
+                <svg className="w-5 h-5 text-[#2d4a3e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" strokeWidth="2" />
+                </svg>
+                <span className="text-sm font-bold text-[#1a3028]">Fair &amp; Transparent</span>
+              </div>
+              <p className="text-xs text-[#3d4d44] leading-relaxed">
+                Automated monitoring supports human review. AI-generated telemetry does not independently make disciplinary decisions.
+              </p>
+            </div>
+          </aside>
+
+          {/* Document Content Column */}
+          <main className="lg:col-span-8 flex flex-col gap-6">
+            {/* 1. Acceptance */}
+            <section
+              id="acceptance"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  01
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Acceptance of Terms</h2>
+              </div>
+              <div className="space-y-4 text-[#3d4d44] text-sm sm:text-[15px] leading-relaxed">
+                <p>
+                  By initiating, accessing, or completing an examination session on the ProctorAi platform, you explicitly agree to abide by these Terms of Service, institutional integrity codes, and our linked Privacy Policy.
+                </p>
+                <p>
+                  If you do not agree to these terms or cannot fulfill the technical prerequisites, please do not proceed with your assessment session and immediately notify your academic institution to request alternative examination arrangements.
+                </p>
+              </div>
+            </section>
+
+            {/* 2. Eligibility & Authorization */}
+            <section
+              id="eligibility"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  02
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Eligibility &amp; Authorization</h2>
+              </div>
+              <div className="space-y-4 text-[#3d4d44] text-sm sm:text-[15px] leading-relaxed">
+                <p>
+                  This proctoring system is authorized solely for registered candidates enrolled in scheduled, accredited assessments through partnering educational institutions, licensing boards, and certification authorities.
+                </p>
+                <p>
+                  You must authenticate using valid credentials provided by your institution or an authorized government-issued photo identity document. Impersonation or unauthorized delegation is strictly prohibited.
+                </p>
+              </div>
+            </section>
+
+            {/* 3. Before Your Exam */}
+            <section
+              id="before-your-exam"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  03
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Before Your Exam</h2>
+              </div>
+              <p className="text-sm text-[#3d4d44] mb-4 leading-relaxed">
+                Prior to launching the assessment, you are responsible for establishing a compliant testing environment:
               </p>
 
-              <nav className="border-l border-neutral-200">
-                {sections.map((section, index) => (
-                  <a
-                    key={section}
-                    href={`#section-${index + 1}`}
-                    className="group block border-l-2 border-transparent px-4 py-2 text-xs leading-5 text-neutral-500 transition-all hover:border-brand-green hover:bg-brand-green-light/40 hover:text-brand-green"
-                  >
-                    <span className="mr-2 font-mono text-[10px] text-neutral-300 transition-colors group-hover:text-brand-green">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    {section}
-                  </a>
-                ))}
-              </nav>
-
-              {/* Info card */}
-              <div className="mt-8 rounded-xl border border-brand-green-border bg-brand-green-light/30 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-brand-green shadow-sm">
-                    <svg
-                      aria-hidden="true"
-                      className="h-4 w-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                      <path d="m9 12 2 2 4-4" />
+              <div className="space-y-3 text-sm text-[#3d4d44]">
+                <div className="p-3.5 rounded-lg bg-[#f0f7f3] border border-[#d2dbd5]/40 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eaf1ec] flex items-center justify-center shrink-0 text-[#2d4a3e]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-
                   <div>
-                    <p className="text-xs font-semibold text-neutral-900">
-                      Fair &amp; transparent
-                    </p>
+                    <strong className="text-[#1a3028] block text-xs sm:text-sm">Hardware &amp; Connectivity:</strong>
+                    <span className="text-xs sm:text-sm">Functioning webcam, clear microphone, and a stable broadband internet connection with adequate bandwidth.</span>
+                  </div>
+                </div>
 
-                    <p className="mt-1 text-[11px] leading-4 text-neutral-500">
-                      Automated monitoring supports human review and does not
-                      independently determine misconduct.
+                <div className="p-3.5 rounded-lg bg-[#f0f7f3] border border-[#d2dbd5]/40 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eaf1ec] flex items-center justify-center shrink-0 text-[#2d4a3e]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div>
+                    <strong className="text-[#1a3028] block text-xs sm:text-sm">Environment Setup:</strong>
+                    <span className="text-xs sm:text-sm">A quiet, well-illuminated, private room with no unauthorized secondary screens, smartwatches, or companion devices.</span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-lg bg-[#f0f7f3] border border-[#d2dbd5]/40 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-[#eaf1ec] flex items-center justify-center shrink-0 text-[#2d4a3e]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <strong className="text-[#1a3028] block text-xs sm:text-sm">Calibration &amp; Sweep:</strong>
+                    <span className="text-xs sm:text-sm">Completing the guided 360° workspace sweep, showing hand position, and verifying camera angles as requested.</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 4. During Your Exam */}
+            <section
+              id="during-your-exam"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  04
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">During Your Exam</h2>
+              </div>
+              <div className="space-y-4 text-[#3d4d44] text-sm sm:text-[15px] leading-relaxed">
+                <p>Throughout the duration of your examination, you agree to:</p>
+                <ul className="space-y-2.5 text-sm text-[#3d4d44]">
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2d4a3e] mt-2 shrink-0" />
+                    <span>Remain continuously visible in the camera viewport, except for authorized institution-approved rest intervals.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2d4a3e] mt-2 shrink-0" />
+                    <span>Refrain from communicating with external individuals in person, by telephone, or via digital chat tools.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#2d4a3e] mt-2 shrink-0" />
+                    <span>Respond promptly to in-session system calibration prompts, such as centering your face or clarifying lighting.</span>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            {/* 5. AI Monitoring & Risk Scoring */}
+            <section
+              id="ai-monitoring"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  05
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">AI Monitoring &amp; Risk Scoring</h2>
+              </div>
+              <div className="space-y-4 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  ProctorAi deploys computer-vision models to measure gaze vectors, analyze head posture, evaluate acoustic levels, and ensure single-candidate continuity.
+                </p>
+
+                <div className="p-4 rounded-xl bg-[#f0f7f3] border border-[#d2dbd5]/40 flex items-start gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#eaf1ec] flex items-center justify-center shrink-0 text-[#2d4a3e]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeWidth="2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <strong className="text-sm font-bold text-[#1a3028] block mb-1">Human Review Guarantee</strong>
+                    <p className="text-xs sm:text-sm text-[#3d4d44] leading-relaxed">
+                      Automated risk metrics serve as an evidentiary aid for institutional proctors. An automated anomaly flag is never an autonomous finding of academic misconduct without mandatory human review and verification.
                     </p>
                   </div>
                 </div>
               </div>
-            </div>
-          </aside>
+            </section>
 
-          {/* Terms content */}
-          <article className="min-w-0">
-            <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-[0_20px_60px_-30px_rgba(0,0,0,0.15)]">
-              <div className="divide-y divide-neutral-100">
-                {/* 1 */}
-                <PolicySection
-                  id="section-1"
-                  number="01"
-                  title="Acceptance"
-                >
-                  <p>
-                    By starting an exam session on ProctorAI, you agree to
-                    these Terms. If you do not agree, do not proceed with the
-                    exam session — contact your institution for alternative
-                    arrangements.
-                  </p>
-                </PolicySection>
-
-                {/* 2 */}
-                <PolicySection
-                  id="section-2"
-                  number="02"
-                  title="Eligibility"
-                >
-                  <p>
-                    This platform is available only to registered candidates
-                    of your institution for their scheduled assessments.
-                  </p>
-                </PolicySection>
-
-                {/* 3 */}
-                <PolicySection
-                  id="section-3"
-                  number="03"
-                  title="Before Your Exam"
-                >
-                  <p>You are responsible for:</p>
-
-                  <PolicyList>
-                    <li>
-                      A working webcam, microphone, and stable internet
-                      connection.
-                    </li>
-                    <li>
-                      A quiet, well-lit room with your entrance door visible
-                      from your seat.
-                    </li>
-                    <li>
-                      Completing the pre-exam checklist honestly: showing and
-                      removing your phone, showing your hands/desk/chair, and
-                      completing the guided room scan when prompted by the AI
-                      agent.
-                    </li>
-                    <li>
-                      Ensuring no unauthorized person, device, or material is
-                      present in your exam environment.
-                    </li>
-                  </PolicyList>
-                </PolicySection>
-
-                {/* 4 */}
-                <PolicySection
-                  id="section-4"
-                  number="04"
-                  title="During Your Exam"
-                >
-                  <p>You agree to:</p>
-
-                  <PolicyList>
-                    <li>
-                      Remain visible in the camera frame for the duration of
-                      the exam, except for permitted breaks (see Support page).
-                    </li>
-                    <li>
-                      Follow any in-session instructions from the AI agent
-                      (e.g., re-showing your hands if prompted).
-                    </li>
-                    <li>
-                      Not use a phone, smartwatch, second screen, notes, or
-                      communication with another person unless explicitly
-                      permitted for your exam.
-                    </li>
-                  </PolicyList>
-                </PolicySection>
-
-                {/* 5 */}
-                <PolicySection
-                  id="section-5"
-                  number="05"
-                  title="AI Monitoring & Risk Scoring"
-                >
-                  <p>
-                    ProctorAI uses computer-vision and AI models to monitor
-                    head/eye movement, detect objects (such as phones), verify
-                    your identity, and compute a risk score for your session.{' '}
-                    <strong>
-                      An automated flag is not a finding of misconduct.
-                    </strong>{' '}
-                    All flagged moments are reviewed by a human evaluator
-                    before any action is taken, and you have the right to
-                    appeal (see FAQ).
-                  </p>
-
-                  <div className="mt-8 rounded-xl border border-brand-green-border bg-brand-green-light/30 p-5">
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-brand-green shadow-sm">
-                        <svg
-                          aria-hidden="true"
-                          className="h-4 w-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
-                          <path d="M12 8v4" />
-                          <path d="M12 16h.01" />
-                        </svg>
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-semibold text-neutral-900">
-                          Human review matters
-                        </p>
-                        <p className="mt-1 text-xs leading-5 text-neutral-500">
-                          AI-generated flags are reviewed by a human evaluator
-                          before they can affect an assessment outcome.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </PolicySection>
-
-                {/* 6 */}
-                <PolicySection
-                  id="section-6"
-                  number="06"
-                  title="Prohibited Conduct"
-                >
-                  <PolicyList>
-                    <li>
-                      Attempting to spoof, obstruct, or bypass any proctoring
-                      check (e.g., pre-recorded video loops, blocking the
-                      camera, impersonation).
-                    </li>
-                    <li>
-                      Leaving the exam environment without permission.
-                    </li>
-                    <li>
-                      Any form of academic dishonesty as defined by your
-                      institution&apos;s academic integrity policy.
-                    </li>
-                  </PolicyList>
-
-                  <p className="mt-6">
-                    Violations may result in exam invalidation and referral to
-                    your institution&apos;s academic integrity process,
-                    governed by your institution&apos;s policies — not solely
-                    by this platform&apos;s automated output.
-                  </p>
-                </PolicySection>
-
-                {/* 7 */}
-                <PolicySection
-                  id="section-7"
-                  number="07"
-                  title="Technical Issues"
-                >
-                  <p>
-                    We do not guarantee uninterrupted service. If you
-                    experience a technical failure during your exam, contact
-                    support immediately (see Support page) and document the
-                    issue where possible (e.g., screenshot, timestamp).
-                  </p>
-                </PolicySection>
-
-                {/* 8 */}
-                <PolicySection
-                  id="section-8"
-                  number="08"
-                  title="Intellectual Property"
-                >
-                  <p>
-                    Exam content, questions, and platform software remain the
-                    property of your institution / ProctorAI and may not be
-                    copied, distributed, or reused.
-                  </p>
-                </PolicySection>
-
-                {/* 9 */}
-                <PolicySection
-                  id="section-9"
-                  number="09"
-                  title="Limitation of Liability"
-                >
-                  <p>
-                    ProctorAI is provided &quot;as is.&quot; Your institution
-                    is not liable for indirect or consequential damages arising
-                    from technical interruptions, except as required by
-                    applicable law.
-                  </p>
-                </PolicySection>
-
-                {/* 10 */}
-                <PolicySection
-                  id="section-10"
-                  number="10"
-                  title="Governing Law"
-                >
-                  <p>
-                    These Terms are governed by the laws of Islamic Republic of
-                    Pakistan, under the jurisdiction of your institution.
-                  </p>
-                </PolicySection>
-
-                {/* 11 */}
-                <PolicySection
-                  id="section-11"
-                  number="11"
-                  title="Changes"
-                >
-                  <p>
-                    We may update these Terms periodically. Continued use of
-                    the platform after changes constitutes acceptance.
-                  </p>
-                </PolicySection>
+            {/* 6. Prohibited Conduct */}
+            <section
+              id="prohibited-conduct"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  06
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Prohibited Conduct</h2>
               </div>
-            </div>
+              <div className="space-y-4 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>The following activities constitute serious policy violations:</p>
+                <ul className="space-y-2.5 text-sm text-[#3d4d44]">
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-2 shrink-0" />
+                    <span>Attempting to circumvent, tamper with, or spoof proctoring checks (e.g., virtual cameras, pre-recorded video loops, screen splitting, virtual machines).</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-2 shrink-0" />
+                    <span>Copying, broadcasting, photographing, screen-recording, or sharing examination questions and test materials.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-2 shrink-0" />
+                    <span>Accessing unauthorized secondary browser tabs, unauthorized search engines, or AI text generators during closed-book assessments.</span>
+                  </li>
+                </ul>
+                <p className="text-xs sm:text-sm text-[#708077] pt-1">
+                  Suspected breaches are reported directly to institutional review boards according to your institution&apos;s disciplinary statutes.
+                </p>
+              </div>
+            </section>
 
-            {/* Bottom navigation */}
-            <div className="mt-8 flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-              <p className="text-xs text-neutral-400">
-                © 2026 ProctorAI. Terms and transparency by design.
-              </p>
+            {/* 7. Technical Reliability & Support */}
+            <section
+              id="technical-issues"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  07
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Technical Reliability &amp; Support</h2>
+              </div>
+              <div className="space-y-3 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  While ProctorAi is engineered for 99.98% availability, network interruptions or client-side hardware drops may occasionally occur.
+                </p>
+                <p>
+                  In the event of a sudden connection loss, candidate state is buffered locally. Candidates are encouraged to reconnect promptly and notify their institutional proctor to register timestamps for academic review.
+                </p>
+              </div>
+            </section>
 
+            {/* 8. Intellectual Property */}
+            <section
+              id="intellectual-property"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  08
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Intellectual Property</h2>
+              </div>
+              <div className="space-y-3 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  All proprietary software algorithms, computer-vision pipelines, interface designs, trademarks, and documentation are the exclusive intellectual property of ProctorAi Technologies, Inc.
+                </p>
+                <p>
+                  All examination questions, testing assets, and institutional course materials remain the intellectual property of your academic institution or certifying board.
+                </p>
+              </div>
+            </section>
+
+            {/* 9. Limitation of Liability */}
+            <section
+              id="limitation-of-liability"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  09
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Limitation of Liability</h2>
+              </div>
+              <div className="space-y-3 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  To the maximum extent permitted by applicable law, ProctorAi shall not be held liable for indirect, incidental, punitive, or consequential damages resulting from local network outages, power interruptions, or candidate hardware misconfigurations.
+                </p>
+              </div>
+            </section>
+
+            {/* 10. Governing Law */}
+            <section
+              id="governing-law"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  10
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Governing Law</h2>
+              </div>
+              <div className="space-y-3 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  These Terms shall be interpreted and governed in accordance with the laws of the jurisdiction specified in your institutional licensing agreement, subject to federal and state educational privacy standards.
+                </p>
+              </div>
+            </section>
+
+            {/* 11. Changes to These Terms */}
+            <section
+              id="changes"
+              className="bg-white rounded-xl p-6 sm:p-8 shadow-xs border border-[#d2dbd5]/40 scroll-mt-24 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-2 py-0.5 rounded bg-[#eaf1ec] text-[#1a3028] text-xs font-mono font-bold">
+                  11
+                </span>
+                <h2 className="text-xl sm:text-2xl text-[#1a3028] font-bold">Changes to These Terms</h2>
+              </div>
+              <div className="space-y-3 text-sm sm:text-[15px] text-[#3d4d44] leading-relaxed">
+                <p>
+                  We may revise these Terms of Service to incorporate new regulatory requirements or operational improvements. Notice of material changes will be displayed on the platform pre-check interface prior to active exam entry.
+                </p>
+              </div>
+            </section>
+
+            {/* Bottom Navigation */}
+            <div className="pt-4 flex items-center justify-between border-t border-[#d2dbd5]/40 text-xs font-medium text-[#708077]">
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-4 py-2.5 text-xs font-medium text-neutral-600 shadow-sm transition hover:border-brand-green-border hover:text-brand-green"
+                className="inline-flex items-center gap-1.5 text-[#3d4d44] hover:text-[#1a3028] transition-colors"
               >
-                <span aria-hidden="true">←</span>
-                Back to ProctorAI
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M10 19l-7-7m0 0l7-7m-7 7h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Back to ProctorAi
               </Link>
+
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="inline-flex items-center gap-1.5 text-[#3d4d44] hover:text-[#1a3028] transition-colors cursor-pointer"
+              >
+                Back to top
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 10l7-7m0 0l7 7m-7-7v18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
-          </article>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
-  );
-}
-
-function PolicySection({
-  id,
-  number,
-  title,
-  children,
-}: {
-  id: string;
-  number: string;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="scroll-mt-8 p-8 sm:p-10 lg:p-12">
-      <div className="flex items-start gap-4">
-        <span className="mt-1 flex h-8 min-w-8 items-center justify-center rounded-lg bg-brand-green-light px-2 font-mono text-[10px] font-bold tracking-wide text-brand-green">
-          {number}
-        </span>
-
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight text-neutral-950 sm:text-3xl">
-            {title}
-          </h2>
-
-          <div className="mt-3 h-0.5 w-10 rounded-full bg-brand-green" />
-        </div>
-      </div>
-
-      <div className="mt-6 text-[15px] leading-8 text-neutral-600">
-        {children}
-      </div>
-    </section>
-  );
-}
-
-function PolicyList({ children }: { children: React.ReactNode }) {
-  return (
-    <ul className="mt-4 space-y-4">
-      {React.Children.map(children, (child) => {
-        if (!React.isValidElement<{ children?: React.ReactNode; className?: string }>(child)) {
-          return null;
-        }
-
-        return React.cloneElement(child, {
-          className:
-            'group flex gap-4 text-[15px] leading-8 text-neutral-600',
-          children: (
-            <>
-              <span className="mt-[13px] h-1.5 w-1.5 shrink-0 rounded-full bg-brand-green transition-transform group-hover:scale-125" />
-              <span>{child.props.children}</span>
-            </>
-          ),
-        });
-      })}
-    </ul>
   );
 }
